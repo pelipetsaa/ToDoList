@@ -1,0 +1,28 @@
+# Render Blueprint for the backend: https://render.com/docs/blueprint-spec
+# Setup steps are in docs/deploy.md. The database lives on Neon (Render's free Postgres expires after 30 days).
+services:
+  - type: web
+    name: todolist-server
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    # Deploy a commit on main only after the GitHub Actions CI checks pass.
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: APP_ENV
+        value: production
+      # Render terminates TLS and appends the client IP to X-Forwarded-For.
+      - key: TRUST_PROXY
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+      # Neon connection, e.g. jdbc:postgresql://ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
