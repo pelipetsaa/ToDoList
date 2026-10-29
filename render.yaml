@@ -5,7 +5,8 @@ services:
     name: todolist-server
     runtime: docker
     plan: free
-    region: frankfurt
+    # Same AWS region as the Neon database (us-east-2); Render cannot change it after creation.
+    region: ohio
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /health
@@ -19,7 +20,7 @@ services:
         value: "true"
       - key: JWT_SECRET
         generateValue: true
-      # Neon connection, e.g. jdbc:postgresql://ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require
+      # Neon direct (non-pooler) endpoint, e.g. jdbc:postgresql://ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
       - key: DB_URL
         sync: false
       - key: DB_USER

@@ -9,16 +9,17 @@ Everything Render needs is in the repository: [`Dockerfile`](../Dockerfile) buil
 
 ## 1. Create the database on Neon
 
-1. Sign up at neon.tech and create a project in the **AWS Europe Central 1 (Frankfurt)** region, next to the
-   Render service.
+1. Sign up at neon.tech and create a project. Keep the Render service in the same region: `render.yaml` uses
+   `ohio`, matching Neon's **AWS US East 2 (Ohio)**; change it before creating the service if you pick another one.
 2. Open **Connect** and copy the connection details. Neon shows a URL like
-   `postgresql://neondb_owner:secret@ep-cool-name-123456.eu-central-1.aws.neon.tech/neondb?sslmode=require`.
+   `postgresql://neondb_owner:secret@ep-cool-name-123456-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require`.
 3. Split it into the three values the server expects (the JDBC driver does not take the user and password
-   inside the URL):
+   inside the URL). Drop `-pooler` from the host: the server keeps its own connection pool (HikariCP), and
+   Flyway migrations need a direct session rather than Neon's transaction pooler.
 
    | Variable | Value from the example |
    |----------|------------------------|
-   | `DB_URL` | `jdbc:postgresql://ep-cool-name-123456.eu-central-1.aws.neon.tech/neondb?sslmode=require` |
+   | `DB_URL` | `jdbc:postgresql://ep-cool-name-123456.us-east-2.aws.neon.tech/neondb?sslmode=require` |
    | `DB_USER` | `neondb_owner` |
    | `DB_PASSWORD` | `secret` |
 
