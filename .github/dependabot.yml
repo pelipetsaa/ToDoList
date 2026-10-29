@@ -1,0 +1,41 @@
+version: 2
+
+updates:
+  # Gradle version catalog (gradle/libs.versions.toml) and the Gradle wrapper.
+  - package-ecosystem: gradle
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      kotlin-and-compose:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "org.jetbrains.compose*"
+          - "com.google.devtools.ksp*"
+      ktor:
+        patterns:
+          - "io.ktor*"
+      androidx:
+        patterns:
+          - "androidx.*"
+          - "com.android.*"
+      testing:
+        patterns:
+          - "org.testcontainers*"
+          - "app.cash.turbine*"
+          - "junit*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
