@@ -1,0 +1,15 @@
+TEAM_ID=
+
+PRODUCT_NAME=ToDoList
+PRODUCT_BUNDLE_IDENTIFIER=com.pelypets.todolist$(TEAM_ID)
+
+CURRENT_PROJECT_VERSION=1
+MARKETING_VERSION=1.0
+
+// "//" starts a comment in xcconfig files, hence the $() in the URL.
+API_BASE_URL=http:/$()/localhost:8080
+
+// iOS OAuth client from Google Cloud Console, e.g. 1234-abc.apps.googleusercontent.com,
+// and its reversed form com.googleusercontent.apps.1234-abc. Leave empty to disable Google Sign-In.
+GOOGLE_IOS_CLIENT_ID=942997837259-56nldcuks4gmmaju4hvr15ttik6ra6h7.apps.googleusercontent.com
+GOOGLE_REVERSED_CLIENT_ID=com.googleusercontent.apps.942997837259-56nldcuks4gmmaju4hvr15ttik6ra6h7

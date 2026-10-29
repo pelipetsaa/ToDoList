@@ -1,0 +1,26 @@
+ktor:
+  deployment:
+    port: "$PORT:8080"
+    host: 0.0.0.0
+  application:
+    modules:
+      - com.pelypets.todolist.server.ApplicationKt.module
+
+database:
+  url: "$DB_URL:jdbc:postgresql://localhost:5434/todolist"
+  user: "$DB_USER:todolist"
+  password: "$DB_PASSWORD:todolist"
+  maxPoolSize: 10
+
+jwt:
+  # Override JWT_SECRET in every non-local environment.
+  secret: "$JWT_SECRET:dev-only-secret-change-me-please-32b"
+  issuer: "todolist-server"
+  audience: "todolist-clients"
+  realm: "todolist"
+  accessTokenTtlSeconds: 900
+  refreshTokenTtlDays: 30
+
+google:
+  # Comma-separated OAuth client IDs (web, android, ios) accepted as the ID token audience.
+  clientIds: "$GOOGLE_CLIENT_IDS:942997837259-p5avn0h84otleksfs47cnbrr7gs52t2c.apps.googleusercontent.com,942997837259-56nldcuks4gmmaju4hvr15ttik6ra6h7.apps.googleusercontent.com"
