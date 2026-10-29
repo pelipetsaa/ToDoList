@@ -1,10 +1,27 @@
 name: Release
 
-# Push a tag like v1.2.0 to build a signed Android release and attach it to a GitHub release.
+# Push a tag like v1.2.0 to build a signed Android release, attach it to a GitHub release and, once
+# PLAY_SERVICE_ACCOUNT_JSON is set, upload it to Google Play (internal testing track by default).
+# Run the workflow manually on a tag to send that version to another track, e.g. production.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      play_track:
+        description: Google Play track
+        type: choice
+        options: [internal, alpha, beta, production]
+        default: internal
+      play_status:
+        description: "Release status: completed, draft (required while the app was never published), or inProgress for a staged rollout"
+        type: choice
+        options: [completed, draft, inProgress]
+        default: completed
+      play_user_fraction:
+        description: Share of users for a staged rollout (inProgress only), e.g. 0.1
+        type: string
+        default: ""
 
 permissions:
   contents: write
@@ -16,6 +33,9 @@ jobs:
   android:
     name: Signed Android release
     runs-on: ubuntu-latest
+    env:
+      # Secrets cannot be used in `if:` directly; an empty value skips the Google Play upload.
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -58,9 +78,28 @@ jobs:
             app/androidApp/build/outputs/mapping/release/mapping.txt
 
       - name: Publish the GitHub release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
           gh release create "$GITHUB_REF_NAME" --generate-notes
           app/androidApp/build/outputs/apk/release/androidApp-release.apk
+
+      # Tag pushes go to the track and status from the PLAY_TRACK / PLAY_RELEASE_STATUS repository variables
+      # (internal / completed when unset); manual runs use the inputs above.
+      - name: Upload to Google Play
+        if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ env.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.pelypets.todolist
+          releaseFiles: app/androidApp/build/outputs/bundle/release/androidApp-release.aab
+          releaseName: ${{ github.ref_name }}
+          track: ${{ inputs.play_track || vars.PLAY_TRACK || 'internal' }}
+          status: ${{ inputs.play_status || vars.PLAY_RELEASE_STATUS || 'completed' }}
+          userFraction: ${{ inputs.play_user_fraction }}
+          mappingFile: app/androidApp/build/outputs/mapping/release/mapping.txt
+
+      - name: Google Play upload skipped
+        if: env.PLAY_SERVICE_ACCOUNT_JSON == ''
+        run: echo "::notice::PLAY_SERVICE_ACCOUNT_JSON is not set, the bundle was not uploaded to Google Play (docs/release.md)"
