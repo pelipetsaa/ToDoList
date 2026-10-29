@@ -107,5 +107,37 @@ existing build between tracks without rebuilding is done in Play Console.
 ## iOS
 
 iOS release builds use the `Release` configuration with `API_BASE_URL[config=Release]` from
-`app/iosApp/Configuration/Config.xcconfig`. Signing and App Store upload need an Apple Developer account and are
-done from Xcode (**Product → Archive**); they are not automated yet.
+`app/iosApp/Configuration/Config.xcconfig` and the shared `iosApp` scheme.
+
+When the App Store Connect secrets below are set, a `v*` tag also runs the **iOS release** job on macOS: it archives
+the app, lets Xcode create the signing certificate and provisioning profile through the API key, and uploads the
+build to App Store Connect, where it shows up in **TestFlight** after processing (usually 5–30 minutes). Without the
+secrets the job is skipped and the Android release runs as before. The App Store version comes from the tag
+(`v1.2.0` → `1.2.0`) and the build number from the workflow run number.
+
+### One-time setup
+
+1. **Apple Developer Program** membership ($99 per year) at developer.apple.com.
+2. **App record.** In App Store Connect → **Apps → New App**, platform iOS, bundle ID `com.pelypets.todolist`
+   (register it under **Certificates, Identifiers & Profiles → Identifiers** first if it is not offered).
+3. **API key.** App Store Connect → **Users and Access → Integrations → App Store Connect API → Team Keys**,
+   generate a key with the **Admin** role (needed for Xcode to create cloud-managed distribution certificates).
+   Download the `.p8` file — it can be downloaded only once.
+4. **GitHub secrets** (Settings → Secrets and variables → Actions):
+
+   | Secret | Value |
+   |--------|-------|
+   | `APP_STORE_CONNECT_KEY_ID` | Key ID shown next to the key |
+   | `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID shown above the keys list |
+   | `APP_STORE_CONNECT_API_KEY_P8` | the whole content of `AuthKey_<KEY_ID>.p8`, including the BEGIN/END lines |
+   | `APPLE_TEAM_ID` | Team ID from developer.apple.com → **Membership details** |
+
+The bundle ID is fixed in `Config.xcconfig`, so the Google Sign-In iOS client (registered for
+`com.pelypets.todolist`) works in release builds without changes.
+
+### Publishing on the App Store
+
+CI stops at TestFlight. To release a version: App Store Connect → the app → **+ Version**, fill in what's new,
+screenshots and review information on first release, pick the uploaded build and **Submit for Review**. The app
+declares `ITSAppUsesNonExemptEncryption = NO` (it only uses HTTPS), so no export compliance question is asked per
+build.

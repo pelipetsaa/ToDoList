@@ -3,6 +3,7 @@ name: Release
 # Push a tag like v1.2.0 to build a signed Android release, attach it to a GitHub release and, once
 # PLAY_SERVICE_ACCOUNT_JSON is set, upload it to Google Play (internal testing track by default).
 # Run the workflow manually on a tag to send that version to another track, e.g. production.
+# With the App Store Connect secrets set, the same tag also archives the iOS app and uploads it to TestFlight.
 on:
   push:
     tags: ["v*"]
@@ -103,3 +104,109 @@ jobs:
       - name: Google Play upload skipped
         if: env.PLAY_SERVICE_ACCOUNT_JSON == ''
         run: echo "::notice::PLAY_SERVICE_ACCOUNT_JSON is not set, the bundle was not uploaded to Google Play (docs/release.md)"
+
+  # Decides on a cheap Linux runner whether the macOS job is needed; secrets cannot be read in a job-level `if:`.
+  ios-credentials:
+    name: Check App Store Connect credentials
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - id: check
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -n "$KEY_ID" ] && [ -n "$ISSUER_ID" ] && [ -n "$KEY_P8" ] && [ -n "$TEAM_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::App Store Connect credentials are not set, the iOS release is skipped (docs/release.md)"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Archives the app, signs it through the App Store Connect API key (Xcode-managed certificates and profiles)
+  # and uploads it to App Store Connect, where it appears in TestFlight.
+  ios:
+    name: iOS release to App Store Connect
+    needs: ios-credentials
+    if: needs.ios-credentials.outputs.configured == 'true'
+    runs-on: macos-15
+    env:
+      KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      # App Store Connect only accepts builds made with a recent Xcode and iOS SDK.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: actions/cache@v4
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+
+      - name: Install the App Store Connect API key
+        env:
+          KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/asc"
+          printf '%s\n' "$KEY_P8" > "$RUNNER_TEMP/asc/AuthKey_$KEY_ID.p8"
+          echo "ASC_KEY_PATH=$RUNNER_TEMP/asc/AuthKey_$KEY_ID.p8" >> "$GITHUB_ENV"
+
+      - name: Archive
+        run: |
+          version_args=()
+          # A tag like v1.2.0 sets the App Store version; other refs keep MARKETING_VERSION from Config.xcconfig.
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version_args+=("MARKETING_VERSION=${GITHUB_REF_NAME#v}")
+          fi
+          xcodebuild archive \
+            -project app/iosApp/iosApp.xcodeproj -scheme iosApp -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/ToDoList.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            "${version_args[@]}"
+
+      - name: Upload to App Store Connect
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/ToDoList.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID"
+
+      - name: Keep the debug symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-dsyms
+          path: ${{ runner.temp }}/ToDoList.xcarchive/dSYMs

@@ -4,6 +4,8 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>TodoApiBaseUrl</key>
 	<string>$(API_BASE_URL)</string>
 	<key>GIDClientID</key>

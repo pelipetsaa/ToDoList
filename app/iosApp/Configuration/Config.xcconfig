@@ -1,7 +1,9 @@
+// Apple Developer team for signing; CI passes DEVELOPMENT_TEAM directly.
 TEAM_ID=
 
 PRODUCT_NAME=ToDoList
-PRODUCT_BUNDLE_IDENTIFIER=com.pelypets.todolist$(TEAM_ID)
+// Fixed: the iOS OAuth client in Google Cloud and the App Store Connect record are registered for this bundle ID.
+PRODUCT_BUNDLE_IDENTIFIER=com.pelypets.todolist
 
 CURRENT_PROJECT_VERSION=1
 MARKETING_VERSION=1.0

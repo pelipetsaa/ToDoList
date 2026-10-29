@@ -55,7 +55,7 @@ curl http://localhost:8080/health   # {"status":"UP"}
 ./gradlew :app:androidApp:installDebug
 ```
 
-iOS: open `app/iosApp/iosApp.xcodeproj` in Xcode and run the `app.iosApp` scheme on a simulator.
+iOS: open `app/iosApp/iosApp.xcodeproj` in Xcode and run the shared `iosApp` scheme on a simulator.
 The simulator reaches the host as `localhost`.
 
 ### Configuration
@@ -165,5 +165,6 @@ Formatting rules live in [`.editorconfig`](.editorconfig) and match Android Stud
 
 When all checks pass on `main`, Render deploys the server ([docs/deploy.md](docs/deploy.md)).
 Pushing a `v*` tag runs [`.github/workflows/release.yml`](.github/workflows/release.yml), which builds a signed
-Android APK and App Bundle and publishes a GitHub release ([docs/release.md](docs/release.md)).
+Android APK and App Bundle and publishes a GitHub release; with the store credentials set it also uploads the
+bundle to Google Play and the iOS build to App Store Connect / TestFlight ([docs/release.md](docs/release.md)).
 [Dependabot](.github/dependabot.yml) opens weekly pull requests for Gradle, GitHub Actions and Docker updates.
