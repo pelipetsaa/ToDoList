@@ -10,6 +10,7 @@ versions are the `v*` tags that trigger the release workflow.
 - iOS release builds uploaded to App Store Connect / TestFlight once the App Store Connect secrets are set.
 - Server: `/health/ready` readiness check including the database, Prometheus metrics at `/metrics`
   (with `METRICS_TOKEN`), JSON logs in the Docker image, Swagger UI at `/docs`.
+- Russian translation of the apps, including day and month names in dates; the language follows the device.
 
 ### Changed
 - The apps wait up to 75 seconds for the server, so the first request after the free Render instance has slept no

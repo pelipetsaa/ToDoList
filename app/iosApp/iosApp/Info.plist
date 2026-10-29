@@ -6,6 +6,12 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- iOS reports a language to the app only if the app declares it; Compose resources then pick values-ru. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ru</string>
+	</array>
 	<key>TodoApiBaseUrl</key>
 	<string>$(API_BASE_URL)</string>
 	<key>GIDClientID</key>
