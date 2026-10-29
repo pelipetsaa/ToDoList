@@ -15,4 +15,5 @@ USER app
 ENV APP_ENV=production \
     PORT=8080
 EXPOSE 8080
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]
+# JSON logs (logback-json.xml) so log collectors can index fields such as call-id.
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-Dlogback.configurationFile=logback-json.xml", "-jar", "app.jar"]

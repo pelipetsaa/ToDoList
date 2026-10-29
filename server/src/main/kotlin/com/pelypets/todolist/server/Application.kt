@@ -2,6 +2,7 @@ package com.pelypets.todolist.server
 
 import com.pelypets.todolist.server.api.plugins.AUTH_RATE_LIMIT
 import com.pelypets.todolist.server.api.plugins.JWT_AUTH
+import com.pelypets.todolist.server.api.plugins.configureMetrics
 import com.pelypets.todolist.server.api.plugins.configureMonitoring
 import com.pelypets.todolist.server.api.plugins.configureRateLimits
 import com.pelypets.todolist.server.api.plugins.configureSecurity
@@ -51,9 +52,10 @@ fun Application.configureApp(config: AppConfig, overrides: List<Module> = emptyL
     configureValidation()
     configureRateLimits(config.rateLimit, config.trustProxy)
     configureSecurity(config.jwt, get<JwtAccessTokenIssuer>().verifier)
+    configureMetrics(config.metricsToken, config.environment)
 
     routing {
-        healthRoutes()
+        healthRoutes(database)
         rateLimit(AUTH_RATE_LIMIT) {
             authRoutes(authService)
         }

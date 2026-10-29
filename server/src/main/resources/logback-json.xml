@@ -1,0 +1,14 @@
+<!-- One JSON object per line for log collectors; the Docker image selects it with -Dlogback.configurationFile. -->
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- MDC values such as call-id become fields of each entry. -->
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+    <logger name="io.netty" level="INFO"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="org.flywaydb" level="INFO"/>
+    <logger name="Exposed" level="WARN"/>
+</configuration>

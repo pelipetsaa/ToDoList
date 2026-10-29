@@ -11,6 +11,7 @@ import com.pelypets.todolist.domain.error.DomainError
 import com.pelypets.todolist.domain.model.SessionState
 import com.pelypets.todolist.domain.model.TimeRange
 import com.pelypets.todolist.domain.model.Todo
+import com.pelypets.todolist.domain.model.TodoDraft
 import com.pelypets.todolist.domain.model.TodoStatus
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -60,6 +61,30 @@ class RepositoriesTest {
             val result = TodoRepositoryImpl(TodoApi(env.client)).getTodo("t1")
             assertEquals(expected, assertIs<DomainResult.Failure>(result).error, "for $status")
         }
+    }
+
+    @Test
+    fun readsAreRetriedWhileTheServerIsUnavailable() = runTest {
+        var calls = 0
+        val env = TestEnvironment(loggedIn) {
+            if (++calls == 1) respondJson("", HttpStatusCode.ServiceUnavailable) else respondJson("[$TODO_JSON]")
+        }
+
+        val result = TodoRepositoryImpl(TodoApi(env.client)).getTodos(range)
+
+        assertIs<DomainResult.Success<List<Todo>>>(result)
+        assertEquals(2, env.requests.size)
+    }
+
+    @Test
+    fun writesAreNotRetriedSoATodoIsNeverCreatedTwice() = runTest {
+        val env = TestEnvironment(loggedIn) { respondJson("", HttpStatusCode.ServiceUnavailable) }
+        val draft = TodoDraft("Buy milk", "", Instant.parse("2026-10-29T10:00:00Z"), TodoStatus.TODO)
+
+        val result = TodoRepositoryImpl(TodoApi(env.client)).create(draft)
+
+        assertIs<DomainResult.Failure>(result)
+        assertEquals(1, env.requests.size)
     }
 
     @Test

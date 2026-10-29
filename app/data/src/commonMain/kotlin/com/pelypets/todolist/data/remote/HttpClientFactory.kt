@@ -8,6 +8,7 @@ import com.pelypets.todolist.data.session.SessionManager
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.auth.Auth
@@ -20,6 +21,8 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.post
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
@@ -34,13 +37,28 @@ internal val DataJson = Json {
 
 object HttpClientFactory {
 
+    /**
+     * The free Render instance sleeps after 15 minutes without traffic and holds the first request while it starts,
+     * which can take close to a minute; a shorter timeout would turn every first sign-in into a network error.
+     */
+    internal const val REQUEST_TIMEOUT_MILLIS = 75_000L
+
+    /** Statuses a proxy returns while the server restarts or redeploys; worth another try for reads. */
+    private val transientStatuses = setOf(HttpStatusCode.BadGateway, HttpStatusCode.ServiceUnavailable, HttpStatusCode.GatewayTimeout)
+
     fun create(engine: HttpClientEngine, config: ApiConfig, session: SessionManager): HttpClient = HttpClient(engine) {
         expectSuccess = true
         defaultRequest { url(config.baseUrl) }
         install(ContentNegotiation) { json(DataJson) }
         install(HttpTimeout) {
             connectTimeoutMillis = 10_000
-            requestTimeoutMillis = 20_000
+            requestTimeoutMillis = REQUEST_TIMEOUT_MILLIS
+        }
+        // Only GETs are retried: repeating a POST could create the same todo twice.
+        install(HttpRequestRetry) {
+            maxRetries = 2
+            retryIf { request, response -> request.method == HttpMethod.Get && response.status in transientStatuses }
+            exponentialDelay()
         }
         install(Auth) {
             bearer {

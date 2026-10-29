@@ -9,7 +9,8 @@ services:
     region: ohio
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    healthCheckPath: /health
+    # Readiness includes the database, so a deploy with a broken DB_URL never replaces a working instance.
+    healthCheckPath: /health/ready
     # Deploy a commit on main only after the GitHub Actions CI checks pass.
     autoDeployTrigger: checksPass
     envVars:

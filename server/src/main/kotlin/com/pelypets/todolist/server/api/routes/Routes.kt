@@ -13,6 +13,7 @@ import com.pelypets.todolist.server.application.TodoService
 import com.pelypets.todolist.server.domain.NotFoundException
 import com.pelypets.todolist.server.domain.UnauthorizedException
 import com.pelypets.todolist.server.domain.ValidationException
+import com.pelypets.todolist.server.infrastructure.db.AppDatabase
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
@@ -27,8 +28,18 @@ import io.ktor.server.routing.put
 import java.util.UUID
 import kotlin.time.Instant
 
-fun Route.healthRoutes() {
+/** Readiness: the server can serve requests, which needs the database; `/health` only says the process is up. */
+const val HEALTH_READY = "${ApiRoutes.HEALTH}/ready"
+
+fun Route.healthRoutes(database: AppDatabase) {
     get(ApiRoutes.HEALTH) { call.respond(HealthDto(status = "UP")) }
+    get(HEALTH_READY) {
+        if (database.isReachable()) {
+            call.respond(HealthDto(status = "UP"))
+        } else {
+            call.respond(HttpStatusCode.ServiceUnavailable, HealthDto(status = "DOWN"))
+        }
+    }
 }
 
 fun Route.authRoutes(authService: AuthService) {

@@ -61,6 +61,19 @@ Debug builds keep using the local server.
 | `TRUST_PROXY` | behind a proxy | Take the client IP from `X-Forwarded-For` for rate limiting |
 | `AUTH_RATE_LIMIT_PER_MINUTE` | no (20) | Requests per client IP per minute to `/api/v1/auth/*` |
 | `GOOGLE_CLIENT_IDS` | no (project clients) | Accepted Google ID token audiences |
+| `METRICS_TOKEN` | no | Enables Prometheus metrics at `/metrics`, scraped with `Authorization: Bearer <token>` |
+
+## Operations
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /health` | Liveness: the process is up |
+| `GET /health/ready` | Readiness: the database answers; Render's health check uses it, so a deploy that cannot reach the database never replaces a working instance |
+| `GET /metrics` | Prometheus metrics (request timings by route and status, JVM memory, GC, threads); only with `METRICS_TOKEN` in production |
+
+Logs in the Docker image are JSON, one object per line, with the request's `call-id` (also returned to clients
+as `X-Request-Id`) as a field, so a single request can be followed through Render's log search. Local runs keep the
+plain text format.
 
 Changing `JWT_SECRET` signs everyone out: existing access tokens stop validating.
 

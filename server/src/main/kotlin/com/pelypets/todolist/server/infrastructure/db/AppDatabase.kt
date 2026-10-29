@@ -15,6 +15,9 @@ class AppDatabase(private val dataSource: HikariDataSource, val database: Databa
 
     suspend fun <T> query(block: JdbcTransaction.() -> T): T = withContext(Dispatchers.IO) { transaction(database) { block() } }
 
+    /** True when a connection can be taken from the pool and answers a trivial query. */
+    suspend fun isReachable(): Boolean = runCatching { query { exec("SELECT 1") {} } }.isSuccess
+
     override fun close() = dataSource.close()
 
     companion object {

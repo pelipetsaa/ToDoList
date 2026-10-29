@@ -27,6 +27,8 @@ data class AppConfig(
     val rateLimit: RateLimitConfig,
     /** Trust X-Forwarded-* headers; enable only behind a reverse proxy that sets them. */
     val trustProxy: Boolean,
+    /** Bearer token for /metrics; without it production does not expose metrics. */
+    val metricsToken: String? = null,
 ) {
     companion object {
         fun from(config: ApplicationConfig): AppConfig {
@@ -59,6 +61,7 @@ data class AppConfig(
                         ?.getString()?.toInt() ?: RateLimitConfig.DEFAULT_AUTH_REQUESTS_PER_MINUTE,
                 ),
                 trustProxy = config.propertyOrNull("app.trustProxy")?.getString()?.toBooleanStrict() ?: false,
+                metricsToken = config.propertyOrNull("metrics.token")?.getString()?.takeIf(String::isNotBlank),
             )
         }
     }

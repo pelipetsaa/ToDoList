@@ -15,6 +15,10 @@ app:
 rateLimit:
   authRequestsPerMinute: "$AUTH_RATE_LIMIT_PER_MINUTE:20"
 
+metrics:
+  # Bearer token Prometheus sends to /metrics. Without it production does not expose metrics; development does.
+  token: "$?METRICS_TOKEN"
+
 database:
   url: "$DB_URL:jdbc:postgresql://localhost:5434/todolist"
   user: "$DB_USER:todolist"
