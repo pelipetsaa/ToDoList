@@ -73,10 +73,13 @@ Android (Gradle properties, project defaults in `gradle.properties`, overridable
 
 | Property | Default |
 |----------|---------|
-| `todolist.apiBaseUrl` | `http://10.0.2.2:8080` |
+| `todolist.debugApiBaseUrl` | `http://10.0.2.2:8080` — the local server, used by debug builds |
+| `todolist.releaseApiBaseUrl` | empty — the deployed server, used by release builds; must be `https://`, or the release build fails |
 | `todolist.googleWebClientId` | project web client (empty disables Google sign-in) |
 
-iOS (`app/iosApp/Configuration/Config.xcconfig`): `API_BASE_URL`, `GOOGLE_IOS_CLIENT_ID`, `GOOGLE_REVERSED_CLIENT_ID`.
+iOS (`app/iosApp/Configuration/Config.xcconfig`): `API_BASE_URL` for the Debug configuration (`http://localhost:8080`),
+`API_BASE_URL[config=Release]` for the deployed server (must be `https://`, a Release build stops at launch otherwise),
+`GOOGLE_IOS_CLIENT_ID`, `GOOGLE_REVERSED_CLIENT_ID`.
 
 Cleartext HTTP is allowed only for local hosts: through a debug-only network security config on Android,
 and `NSAllowsLocalNetworking` on iOS.

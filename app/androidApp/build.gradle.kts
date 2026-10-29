@@ -21,8 +21,10 @@ dependencies {
     debugImplementation(libs.compose.uiTooling)
 }
 
-// Override in ~/.gradle/gradle.properties or with -P; the defaults target a server running on the host machine.
-val apiBaseUrl = providers.gradleProperty("todolist.apiBaseUrl").getOrElse("http://10.0.2.2:8080")
+// Override in ~/.gradle/gradle.properties or with -P.
+// Debug targets a server on the host machine; release targets the deployed server and must use HTTPS.
+val debugApiBaseUrl = providers.gradleProperty("todolist.debugApiBaseUrl").getOrElse("http://10.0.2.2:8080")
+val releaseApiBaseUrl = providers.gradleProperty("todolist.releaseApiBaseUrl").getOrElse("")
 val googleWebClientId = providers.gradleProperty("todolist.googleWebClientId").getOrElse("")
 
 android {
@@ -35,7 +37,6 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
-        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
     }
     packaging {
@@ -44,7 +45,11 @@ android {
         }
     }
     buildTypes {
+        debug {
+            buildConfigField("String", "API_BASE_URL", "\"$debugApiBaseUrl\"")
+        }
         release {
+            buildConfigField("String", "API_BASE_URL", "\"$releaseApiBaseUrl\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -59,5 +64,15 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+}
+
+// Fail release builds early instead of shipping an app that cannot reach its server.
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    val url = releaseApiBaseUrl
+    doFirst {
+        require(url.startsWith("https://")) {
+            "Set todolist.releaseApiBaseUrl to the HTTPS address of the deployed server (current value: '$url')."
+        }
     }
 }

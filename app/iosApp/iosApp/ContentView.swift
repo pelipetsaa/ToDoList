@@ -22,7 +22,14 @@ struct ContentView: View {
 
 /// Values injected into Info.plist from Configuration/Config.xcconfig.
 enum AppConfig {
-    static var apiBaseUrl: String? { value(for: "TodoApiBaseUrl") }
+    static var apiBaseUrl: String? {
+        let url = value(for: "TodoApiBaseUrl")
+        #if !DEBUG
+        // Without this the shared code falls back to localhost, which a released app can never reach.
+        precondition(url?.hasPrefix("https://") == true, "Set API_BASE_URL[config=Release] in Config.xcconfig")
+        #endif
+        return url
+    }
     static var googleClientId: String? { value(for: "GIDClientID") }
 
     private static func value(for key: String) -> String? {
