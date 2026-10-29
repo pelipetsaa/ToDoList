@@ -5,6 +5,8 @@ versions are the `v*` tags that trigger the release workflow.
 
 ## Unreleased
 
+## 1.1.0 — 2026-10-29
+
 ### Added
 - Google Play upload of release bundles (internal track by default) once `PLAY_SERVICE_ACCOUNT_JSON` is set.
 - iOS release builds uploaded to App Store Connect / TestFlight once the App Store Connect secrets are set.
