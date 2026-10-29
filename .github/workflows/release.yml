@@ -35,14 +35,13 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
 
       - name: Build APK and App Bundle
+        # The server address comes from todolist.releaseApiBaseUrl in gradle.properties.
         env:
-          RELEASE_API_BASE_URL: ${{ vars.RELEASE_API_BASE_URL }}
           STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: >
           ./gradlew :app:androidApp:assembleRelease :app:androidApp:bundleRelease
-          -Ptodolist.releaseApiBaseUrl="$RELEASE_API_BASE_URL"
           -Ptodolist.versionCode=${{ github.run_number }}
           -Ptodolist.versionName="${GITHUB_REF_NAME#v}"
           -Ptodolist.signing.storeFile="$RUNNER_TEMP/release.jks"

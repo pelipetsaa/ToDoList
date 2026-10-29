@@ -87,7 +87,7 @@ jobs:
           :app:shared:testAndroidHostTest
           :app:domain:koverLog :app:data:koverLog :app:shared:koverLog
           :app:androidApp:assembleDebug
-          :app:androidApp:assembleRelease -Ptodolist.releaseApiBaseUrl=https://ci.invalid
+          :app:androidApp:assembleRelease
           | tee gradle.log
       - name: Coverage summary
         run: |

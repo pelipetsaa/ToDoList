@@ -40,7 +40,8 @@ In the repository: **Settings → Secrets and variables → Actions**.
 | `ANDROID_KEYSTORE_PASSWORD` | secret | keystore password |
 | `ANDROID_KEY_ALIAS` | secret | `todolist` |
 | `ANDROID_KEY_PASSWORD` | secret | key password |
-| `RELEASE_API_BASE_URL` | variable | `https://todolist-server.onrender.com` (see [deploy.md](deploy.md)) |
+
+The server address is not a secret: it comes from `todolist.releaseApiBaseUrl` in `gradle.properties`.
 
 ### 4. Google sign-in for release builds
 

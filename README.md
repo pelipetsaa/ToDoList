@@ -77,7 +77,7 @@ Android (Gradle properties, project defaults in `gradle.properties`, overridable
 | Property | Default |
 |----------|---------|
 | `todolist.debugApiBaseUrl` | `http://10.0.2.2:8080` — the local server, used by debug builds |
-| `todolist.releaseApiBaseUrl` | empty — the deployed server, used by release builds; must be `https://`, or the release build fails |
+| `todolist.releaseApiBaseUrl` | `https://todolist-server-zyck.onrender.com` — the deployed server, used by release builds; must be `https://`, or the release build fails |
 | `todolist.googleWebClientId` | project web client (empty disables Google sign-in) |
 
 iOS (`app/iosApp/Configuration/Config.xcconfig`): `API_BASE_URL` for the Debug configuration (`http://localhost:8080`),

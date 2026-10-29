@@ -7,6 +7,9 @@ The backend runs as a Docker container on [Render](https://render.com) (free web
 Everything Render needs is in the repository: [`Dockerfile`](../Dockerfile) builds the image, and the
 [`render.yaml`](../render.yaml) Blueprint describes the service.
 
+**Current deployment:** <https://todolist-server-zyck.onrender.com> (Render, Ohio) with a Neon database in
+AWS us-east-2. The steps below are how it was set up, and how to set it up again from scratch.
+
 ## 1. Create the database on Neon
 
 1. Sign up at neon.tech and create a project. Keep the Render service in the same region: `render.yaml` uses
@@ -40,9 +43,10 @@ From then on every push to `main` is deployed automatically once the CI checks p
 
 ## 3. Point the release apps at the server
 
-- Android: `todolist.releaseApiBaseUrl=https://todolist-server.onrender.com` in `gradle.properties`
-  (or as a `RELEASE_API_BASE_URL` repository variable for CI, see [release.md](release.md)).
-- iOS: `API_BASE_URL[config=Release]=https:/$()/todolist-server.onrender.com` in
+Render adds a suffix when the service name is taken, so use the exact URL from the dashboard:
+
+- Android: `todolist.releaseApiBaseUrl=https://todolist-server-zyck.onrender.com` in `gradle.properties`.
+- iOS: `API_BASE_URL[config=Release]=https:/$()/todolist-server-zyck.onrender.com` in
   `app/iosApp/Configuration/Config.xcconfig`.
 
 Debug builds keep using the local server.
