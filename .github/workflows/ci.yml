@@ -20,16 +20,16 @@ jobs:
     name: Formatting and Android Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
       # ktlint (with Compose rules) through Spotless; fix locally with ./gradlew spotlessApply.
       - run: ./gradlew spotlessCheck :app:androidApp:lintDebug
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lint-report
           path: app/androidApp/build/reports/lint-results-debug.html
@@ -38,23 +38,23 @@ jobs:
     name: Server and contract tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
       # Testcontainers starts PostgreSQL through the runner's Docker daemon.
       - run: ./gradlew :core:jvmTest :server:test :server:koverHtmlReport :server:koverLog | tee gradle.log
       - name: Coverage summary
         run: |
           grep -h "line coverage" gradle.log | sed 's/^/- /' >> "$GITHUB_STEP_SUMMARY" || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: server-coverage
           path: server/build/reports/kover/html
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: server-test-reports
           path: |
@@ -77,12 +77,12 @@ jobs:
           --health-cmd "pg_isready -U todolist -d todolist"
           --health-interval 5s --health-timeout 3s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
       - name: Start the server
         run: |
           ./gradlew :server:buildFatJar
@@ -98,7 +98,7 @@ jobs:
           E2E_BASE_URL: http://localhost:8080
         run: ./gradlew :app:data:testAndroidHostTest --tests '*EndToEndTest*'
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-logs
           path: |
@@ -109,7 +109,7 @@ jobs:
     name: Server Docker image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # The same image Render builds on deploy.
       - run: docker build -t todolist-server .
 
@@ -117,12 +117,12 @@ jobs:
     name: Shared tests and Android build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
       # The release build runs R8, so minification problems surface here rather than in a release.
       - run: >
           ./gradlew
@@ -136,12 +136,12 @@ jobs:
       - name: Coverage summary
         run: |
           grep -h "line coverage" gradle.log | sed 's/^/- /' >> "$GITHUB_STEP_SUMMARY" || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: android-debug-apk
           path: app/androidApp/build/outputs/apk/debug/*.apk
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-test-reports
           path: app/*/build/reports/tests
@@ -150,13 +150,13 @@ jobs:
     name: iOS framework and tests
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
-      - uses: actions/cache@v4
+      - uses: gradle/actions/setup-gradle@v5
+      - uses: actions/cache@v6
         with:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
@@ -167,7 +167,7 @@ jobs:
           :app:shared:iosSimulatorArm64Test
           :app:shared:linkDebugFrameworkIosSimulatorArm64
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ios-test-reports
           path: app/*/build/reports/tests
