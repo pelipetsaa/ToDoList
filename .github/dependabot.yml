@@ -16,10 +16,12 @@ updates:
       ktor:
         patterns:
           - "io.ktor*"
+      # The Android Gradle Plugin often requires a newer Gradle, so both arrive in one pull request.
       androidx:
         patterns:
           - "androidx.*"
           - "com.android.*"
+          - "gradle-wrapper"
       testing:
         patterns:
           - "org.testcontainers*"
