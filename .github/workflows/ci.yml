@@ -61,6 +61,50 @@ jobs:
             server/build/reports/tests
             core/build/reports/tests
 
+  e2e:
+    name: Client against a running server
+    runs-on: ubuntu-latest
+    services:
+      # Same database as docker-compose.yml, so the server starts with its development defaults.
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: todolist
+          POSTGRES_USER: todolist
+          POSTGRES_PASSWORD: todolist
+        ports: ["5434:5432"]
+        options: >-
+          --health-cmd "pg_isready -U todolist -d todolist"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Start the server
+        run: |
+          ./gradlew :server:buildFatJar
+          nohup java -jar server/build/libs/server-all.jar > server.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:8080/health/ready && exit 0
+            sleep 2
+          done
+          cat server.log
+          exit 1
+      - name: Run the client's HTTP stack against it
+        env:
+          E2E_BASE_URL: http://localhost:8080
+        run: ./gradlew :app:data:testAndroidHostTest --tests '*EndToEndTest*'
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs
+          path: |
+            server.log
+            app/data/build/reports/tests
+
   docker:
     name: Server Docker image
     runs-on: ubuntu-latest

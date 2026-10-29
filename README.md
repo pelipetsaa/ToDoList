@@ -132,16 +132,19 @@ Errors are returned as `{"code": "...", "message": "..."}` with codes `VALIDATIO
 ```bash
 ./gradlew :core:jvmTest :server:test               # server tests need Docker (Testcontainers)
 ./gradlew :app:domain:testAndroidHostTest :app:data:testAndroidHostTest :app:shared:testAndroidHostTest
-./gradlew :app:shared:iosSimulatorArm64Test         # macOS only
+./gradlew :app:shared:iosSimulatorArm64Test         # macOS only, includes the Compose UI tests
+
+# End-to-end: the client against a running server (./gradlew :server:run in another terminal)
+E2E_BASE_URL=http://localhost:8080 ./gradlew :app:data:testAndroidHostTest --tests '*EndToEndTest*'
 ```
 
 | Module | What is covered |
 |--------|-----------------|
 | `core` | DTO serialization contract |
-| `server` | Auth flows (register, login, Google, refresh rotation, logout), rate limiting, production config checks, todo CRUD, period filter, user isolation, error codes — against a real PostgreSQL |
+| `server` | Auth flows (register, login, Google, refresh rotation, logout), rate limiting, production config checks, todo CRUD, period filter, user isolation, error codes, readiness and metrics, the OpenAPI spec matching the routes — against a real PostgreSQL |
 | `app/domain` | Period boundaries (week start, month and year changes), validation, use cases |
-| `app/data` | Requests and mapping via `MockEngine`, HTTP → domain error mapping, transparent token refresh, session end on failed refresh |
-| `app/shared` | Reducers and ViewModels of every screen |
+| `app/data` | Requests and mapping via `MockEngine`, HTTP → domain error mapping, transparent token refresh, session end on failed refresh, retries of reads only; `EndToEndTest` against a real server |
+| `app/shared` | Reducers and ViewModels of every screen; Compose UI tests of the sign-in and todo list screens (iOS simulator) |
 
 With Colima instead of Docker Desktop, point Testcontainers to its socket:
 `export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"`.
@@ -162,6 +165,8 @@ Formatting rules live in [`.editorconfig`](.editorconfig) and match Android Stud
 
 - **quality** (Linux): ktlint formatting check and Android Lint.
 - **server** (Linux): contract and server tests with Testcontainers, coverage report.
+- **e2e** (Linux): starts the server with PostgreSQL and runs the client's real HTTP stack (`app/data` with OkHttp)
+  against it: sign-up, todo CRUD, sign-out, error mapping.
 - **docker** (Linux): builds the server image that Render deploys.
 - **android** (Linux): domain, data and shared tests with coverage, the debug APK (uploaded as an artifact)
   and a minified release build.
