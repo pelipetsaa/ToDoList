@@ -27,6 +27,15 @@ val debugApiBaseUrl = providers.gradleProperty("todolist.debugApiBaseUrl").getOr
 val releaseApiBaseUrl = providers.gradleProperty("todolist.releaseApiBaseUrl").getOrElse("")
 val googleWebClientId = providers.gradleProperty("todolist.googleWebClientId").getOrElse("")
 
+// CI passes the run number as versionCode and the git tag as versionName.
+val appVersionCode = providers.gradleProperty("todolist.versionCode").getOrElse("1").toInt()
+val appVersionName = providers.gradleProperty("todolist.versionName").getOrElse("1.0.0")
+
+// Release signing key, kept outside the repository: ~/.gradle/gradle.properties locally,
+// ORG_GRADLE_PROJECT_todolist.signing.* environment variables in CI. See docs/release.md.
+val releaseStoreFile = providers.gradleProperty("todolist.signing.storeFile").orNull
+val releaseSigningConfigured = releaseStoreFile != null
+
 android {
     namespace = "com.pelypets.todolist"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -35,9 +44,19 @@ android {
         applicationId = "com.pelypets.todolist"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
+    }
+    signingConfigs {
+        if (releaseSigningConfigured) {
+            create("release") {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = providers.gradleProperty("todolist.signing.storePassword").get()
+                keyAlias = providers.gradleProperty("todolist.signing.keyAlias").get()
+                keyPassword = providers.gradleProperty("todolist.signing.keyPassword").get()
+            }
+        }
     }
     packaging {
         resources {
@@ -50,7 +69,10 @@ android {
         }
         release {
             buildConfigField("String", "API_BASE_URL", "\"$releaseApiBaseUrl\"")
-            isMinifyEnabled = false
+            // Without a release key the APK is signed with the debug key: installable for testing, not for the store.
+            signingConfig = signingConfigs.getByName(if (releaseSigningConfigured) "release" else "debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
