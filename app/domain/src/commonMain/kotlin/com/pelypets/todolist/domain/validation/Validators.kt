@@ -31,12 +31,11 @@ object CredentialsValidator {
         if (password.isEmpty()) ValidationError.PASSWORD_BLANK else null,
     )
 
-    fun validateRegistration(email: String, password: String, confirmPassword: String): List<ValidationError> =
-        listOfNotNull(
-            validateEmail(email),
-            validateNewPassword(password),
-            if (password != confirmPassword) ValidationError.PASSWORD_MISMATCH else null,
-        )
+    fun validateRegistration(email: String, password: String, confirmPassword: String): List<ValidationError> = listOfNotNull(
+        validateEmail(email),
+        validateNewPassword(password),
+        if (password != confirmPassword) ValidationError.PASSWORD_MISMATCH else null,
+    )
 }
 
 object TodoValidator {

@@ -11,6 +11,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -39,17 +40,16 @@ import todolist.app.shared.generated.resources.sign_in
 import todolist.app.shared.generated.resources.sign_in_with_google
 
 @Composable
-fun LoginRoute(
-    onNavigateToRegister: () -> Unit,
-    viewModel: LoginViewModel = koinViewModel(),
-) {
+fun LoginRoute(onNavigateToRegister: () -> Unit, viewModel: LoginViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val googleSignIn = LocalGoogleSignInProvider.current
+    val currentOnNavigateToRegister by rememberUpdatedState(onNavigateToRegister)
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                LoginEffect.NavigateToRegister -> onNavigateToRegister()
+                LoginEffect.NavigateToRegister -> currentOnNavigateToRegister()
+
                 LoginEffect.LaunchGoogleSignIn -> viewModel.onIntent(
                     when (val result = googleSignIn.signIn()) {
                         is GoogleSignInResult.Success -> LoginIntent.GoogleTokenReceived(result.idToken)

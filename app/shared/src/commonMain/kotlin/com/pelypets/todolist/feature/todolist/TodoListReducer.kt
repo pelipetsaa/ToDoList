@@ -4,8 +4,11 @@ object TodoListReducer {
 
     fun reduce(state: TodoListState, mutation: TodoListMutation): TodoListState = when (mutation) {
         is TodoListMutation.PeriodChanged ->
-            if (mutation.period == state.period) state
-            else TodoListState(period = mutation.period)
+            if (mutation.period == state.period) {
+                state
+            } else {
+                TodoListState(period = mutation.period)
+            }
 
         // Reloads of an already shown list stay silent instead of flashing a full-screen spinner.
         is TodoListMutation.LoadStarted -> state.copy(
@@ -15,21 +18,27 @@ object TodoListReducer {
         )
 
         is TodoListMutation.Loaded ->
-            if (mutation.period != state.period) state
-            else state.copy(
-                todos = mutation.todos.sortedBy { it.dueAt },
-                isLoading = false,
-                isRefreshing = false,
-                hasLoaded = true,
-                error = null,
-            )
+            if (mutation.period != state.period) {
+                state
+            } else {
+                state.copy(
+                    todos = mutation.todos.sortedBy { it.dueAt },
+                    isLoading = false,
+                    isRefreshing = false,
+                    hasLoaded = true,
+                    error = null,
+                )
+            }
 
         is TodoListMutation.LoadFailed ->
-            if (mutation.period != state.period) state
-            else state.copy(
-                isLoading = false,
-                isRefreshing = false,
-                error = mutation.error.takeIf { !state.hasLoaded },
-            )
+            if (mutation.period != state.period) {
+                state
+            } else {
+                state.copy(
+                    isLoading = false,
+                    isRefreshing = false,
+                    error = mutation.error.takeIf { !state.hasLoaded },
+                )
+            }
     }
 }

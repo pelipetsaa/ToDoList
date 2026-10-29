@@ -12,10 +12,7 @@ expect fun platformModule(): Module
 /** Backend URL reachable from the emulator/simulator when the server runs on the host machine. */
 expect val defaultApiBaseUrl: String
 
-fun initKoin(
-    apiConfig: ApiConfig = ApiConfig(defaultApiBaseUrl),
-    appDeclaration: KoinAppDeclaration = {},
-): KoinApplication = startKoin {
+fun initKoin(apiConfig: ApiConfig = ApiConfig(defaultApiBaseUrl), appDeclaration: KoinAppDeclaration = {}): KoinApplication = startKoin {
     appDeclaration()
     modules(platformModule(), dataModule(apiConfig), domainModule, presentationModule)
 }

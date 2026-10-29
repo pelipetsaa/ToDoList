@@ -11,10 +11,7 @@ sealed interface DomainError {
     /** The server throttled the client, e.g. after too many sign-in attempts. */
     data object TooManyRequests : DomainError
 
-    data class Validation(
-        val errors: List<ValidationError> = emptyList(),
-        val serverMessage: String? = null,
-    ) : DomainError
+    data class Validation(val errors: List<ValidationError> = emptyList(), val serverMessage: String? = null) : DomainError
 
     data class Unknown(val message: String? = null) : DomainError
 }

@@ -52,12 +52,7 @@ sealed interface TodoDetailEffect {
 
 sealed interface TodoDetailMutation {
     data object LoadStarted : TodoDetailMutation
-    data class Loaded(
-        val title: String,
-        val description: String,
-        val dueAt: LocalDateTime,
-        val status: TodoStatus,
-    ) : TodoDetailMutation
+    data class Loaded(val title: String, val description: String, val dueAt: LocalDateTime, val status: TodoStatus) : TodoDetailMutation
     data class LoadFailed(val error: DomainError) : TodoDetailMutation
     data class TitleChanged(val value: String) : TodoDetailMutation
     data class DescriptionChanged(val value: String) : TodoDetailMutation

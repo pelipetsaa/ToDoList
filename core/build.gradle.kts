@@ -11,13 +11,13 @@ kotlin {
     iosSimulatorArm64()
     jvm()
     android {
-       namespace = "com.pelypets.todolist.core"
-       compileSdk = libs.versions.android.compileSdk.get().toInt()
-       minSdk = libs.versions.android.minSdk.get().toInt()
-       compilerOptions {
-           jvmTarget = JvmTarget.JVM_11
-       }
-       withHostTest {}
+        namespace = "com.pelypets.todolist.core"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+        }
+        withHostTest {}
     }
     compilerOptions {
         optIn.add("kotlin.time.ExperimentalTime")

@@ -45,10 +45,7 @@ class DeleteTodoUseCase(private val todoRepository: TodoRepository) {
 }
 
 /** Default due date for a new todo: the next full hour in the user's time zone. */
-class DefaultDueDateUseCase(
-    private val clock: Clock,
-    private val timeZone: TimeZone,
-) {
+class DefaultDueDateUseCase(private val clock: Clock, private val timeZone: TimeZone) {
     operator fun invoke(): Instant {
         val now = clock.now().toLocalDateTime(timeZone)
         val startOfHour = LocalDateTime(now.date, LocalTime(now.hour, 0))

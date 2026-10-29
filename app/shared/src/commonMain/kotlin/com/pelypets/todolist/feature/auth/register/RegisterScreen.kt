@@ -8,6 +8,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.text.input.ImeAction
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pelypets.todolist.core.ui.components.ProgressButton
@@ -31,16 +32,14 @@ import todolist.app.shared.generated.resources.register_subtitle
 import todolist.app.shared.generated.resources.register_title
 
 @Composable
-fun RegisterRoute(
-    onNavigateBack: () -> Unit,
-    viewModel: RegisterViewModel = koinViewModel(),
-) {
+fun RegisterRoute(onNavigateBack: () -> Unit, viewModel: RegisterViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                RegisterEffect.NavigateBack -> onNavigateBack()
+                RegisterEffect.NavigateBack -> currentOnNavigateBack()
             }
         }
     }

@@ -20,10 +20,12 @@ class PeriodRangeCalculator(private val timeZone: TimeZone) {
         val today = now.toLocalDateTime(timeZone).date
         val (start, endExclusive) = when (period) {
             Period.TODAY -> today to today.plus(1, DateTimeUnit.DAY)
+
             Period.WEEK -> {
                 val monday = today.minus(DatePeriod(days = today.dayOfWeek.isoDayNumber - 1))
                 monday to monday.plus(1, DateTimeUnit.WEEK)
             }
+
             Period.MONTH -> {
                 val first = LocalDate(today.year, today.month, 1)
                 first to first.plus(1, DateTimeUnit.MONTH)

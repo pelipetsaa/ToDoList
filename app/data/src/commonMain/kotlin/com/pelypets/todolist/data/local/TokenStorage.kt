@@ -2,10 +2,7 @@ package com.pelypets.todolist.data.local
 
 import com.liftric.kvault.KVault
 
-data class StoredTokens(
-    val accessToken: String,
-    val refreshToken: String,
-)
+data class StoredTokens(val accessToken: String, val refreshToken: String)
 
 interface TokenStorage {
     fun read(): StoredTokens?

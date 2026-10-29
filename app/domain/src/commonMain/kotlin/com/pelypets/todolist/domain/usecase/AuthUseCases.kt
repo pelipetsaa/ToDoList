@@ -25,9 +25,11 @@ class RegisterUseCase(private val authRepository: AuthRepository) {
 }
 
 class LoginWithGoogleUseCase(private val authRepository: AuthRepository) {
-    suspend operator fun invoke(idToken: String): DomainResult<Unit> =
-        if (idToken.isBlank()) DomainResult.Failure(DomainError.Unauthorized)
-        else authRepository.loginWithGoogle(idToken)
+    suspend operator fun invoke(idToken: String): DomainResult<Unit> = if (idToken.isBlank()) {
+        DomainResult.Failure(DomainError.Unauthorized)
+    } else {
+        authRepository.loginWithGoogle(idToken)
+    }
 }
 
 class LogoutUseCase(private val authRepository: AuthRepository) {

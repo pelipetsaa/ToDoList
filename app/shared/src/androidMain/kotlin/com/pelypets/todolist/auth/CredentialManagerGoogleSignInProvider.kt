@@ -17,10 +17,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingExcept
  * Google sign-in through Credential Manager. [webClientId] is the OAuth client of type "Web application":
  * the ID token is issued for it, and the backend accepts it as an audience.
  */
-class CredentialManagerGoogleSignInProvider(
-    private val activityContext: Context,
-    private val webClientId: String,
-) : GoogleSignInProvider {
+class CredentialManagerGoogleSignInProvider(private val activityContext: Context, private val webClientId: String) : GoogleSignInProvider {
 
     override suspend fun signIn(): GoogleSignInResult {
         if (webClientId.isBlank()) return UnavailableGoogleSignInProvider.signIn()

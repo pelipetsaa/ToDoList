@@ -26,10 +26,14 @@ kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
 kotlinx-serialization = "1.12.0"
 ktor = "3.6.0"
+composeRulesKtlint = "0.6.8"
+kover = "0.9.11"
+ktlint = "1.8.0"
 kvault = "1.12.0"
 logback = "1.6.6"
 material3 = "1.12.0-alpha03"
 postgresql = "42.7.14"
+spotless = "8.10.4"
 testcontainers = "2.0.5"
 turbine = "1.2.1"
 
@@ -110,3 +114,5 @@ kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

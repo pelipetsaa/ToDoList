@@ -4,15 +4,15 @@ import at.favre.lib.crypto.bcrypt.BCrypt
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
+import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.json.gson.GsonFactory
 import com.pelypets.todolist.server.config.JwtConfig
 import com.pelypets.todolist.server.domain.model.GoogleIdentity
 import com.pelypets.todolist.server.domain.port.AccessTokenIssuer
 import com.pelypets.todolist.server.domain.port.GoogleTokenVerifier
 import com.pelypets.todolist.server.domain.port.PasswordHasher
 import com.pelypets.todolist.server.domain.port.RefreshTokenGenerator
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
-import com.google.api.client.http.javanet.NetHttpTransport
-import com.google.api.client.json.gson.GsonFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
@@ -36,10 +36,7 @@ class BcryptPasswordHasher(private val cost: Int = 12) : PasswordHasher {
     }
 }
 
-class JwtAccessTokenIssuer(
-    private val config: JwtConfig,
-    private val clock: Clock,
-) : AccessTokenIssuer {
+class JwtAccessTokenIssuer(private val config: JwtConfig, private val clock: Clock) : AccessTokenIssuer {
 
     private val algorithm = Algorithm.HMAC256(config.secret)
 
@@ -71,10 +68,9 @@ class SecureRefreshTokenGenerator : RefreshTokenGenerator {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
     }
 
-    override fun hash(token: String): String =
-        MessageDigest.getInstance("SHA-256")
-            .digest(token.toByteArray())
-            .joinToString("") { "%02x".format(it) }
+    override fun hash(token: String): String = MessageDigest.getInstance("SHA-256")
+        .digest(token.toByteArray())
+        .joinToString("") { "%02x".format(it) }
 }
 
 class GoogleApiTokenVerifier(private val clientIds: List<String>) : GoogleTokenVerifier {

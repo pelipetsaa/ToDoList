@@ -1,5 +1,6 @@
 package com.pelypets.todolist.server.api.plugins
 
+import com.auth0.jwt.JWTVerifier
 import com.pelypets.todolist.core.dto.ErrorCodes
 import com.pelypets.todolist.core.dto.ErrorResponse
 import com.pelypets.todolist.core.dto.GoogleLoginDto
@@ -10,7 +11,6 @@ import com.pelypets.todolist.server.domain.EmailTakenException
 import com.pelypets.todolist.server.domain.NotFoundException
 import com.pelypets.todolist.server.domain.UnauthorizedException
 import com.pelypets.todolist.server.domain.ValidationException
-import com.auth0.jwt.JWTVerifier
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json

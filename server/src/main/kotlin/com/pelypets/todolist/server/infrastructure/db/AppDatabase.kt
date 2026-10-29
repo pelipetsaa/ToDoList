@@ -11,13 +11,9 @@ import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.io.Closeable
 
-class AppDatabase(
-    private val dataSource: HikariDataSource,
-    val database: Database,
-) : Closeable {
+class AppDatabase(private val dataSource: HikariDataSource, val database: Database) : Closeable {
 
-    suspend fun <T> query(block: JdbcTransaction.() -> T): T =
-        withContext(Dispatchers.IO) { transaction(database) { block() } }
+    suspend fun <T> query(block: JdbcTransaction.() -> T): T = withContext(Dispatchers.IO) { transaction(database) { block() } }
 
     override fun close() = dataSource.close()
 

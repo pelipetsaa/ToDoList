@@ -13,8 +13,9 @@ private var koinStarted = false
 
 /**
  * Entry point for the iOS app. [googleSignIn] is implemented in Swift on top of the GoogleSignIn SDK
- * and is null when no client ID is configured.
+ * and is null when no client ID is configured. Named like a type because Swift calls it as a factory.
  */
+@Suppress("ktlint:standard:function-naming")
 fun MainViewController(apiBaseUrl: String?, googleSignIn: GoogleSignInBridge?): UIViewController {
     if (!koinStarted) {
         initKoin(ApiConfig(baseUrl = apiBaseUrl?.takeIf { it.isNotBlank() } ?: defaultApiBaseUrl))

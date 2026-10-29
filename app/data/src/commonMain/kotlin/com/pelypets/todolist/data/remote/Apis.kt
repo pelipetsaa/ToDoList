@@ -22,8 +22,7 @@ import kotlin.time.Instant
 
 class AuthApi(private val client: HttpClient) {
 
-    suspend fun login(credentials: EmailCredentialsDto): TokenPairDto =
-        client.post(ApiRoutes.AUTH_LOGIN) { jsonBody(credentials) }.body()
+    suspend fun login(credentials: EmailCredentialsDto): TokenPairDto = client.post(ApiRoutes.AUTH_LOGIN) { jsonBody(credentials) }.body()
 
     suspend fun register(credentials: EmailCredentialsDto): TokenPairDto =
         client.post(ApiRoutes.AUTH_REGISTER) { jsonBody(credentials) }.body()
@@ -38,19 +37,16 @@ class AuthApi(private val client: HttpClient) {
 
 class TodoApi(private val client: HttpClient) {
 
-    suspend fun getTodos(from: Instant, to: Instant): List<TodoDto> =
-        client.get(ApiRoutes.TODOS) {
-            parameter(ApiRoutes.QUERY_FROM, from.toString())
-            parameter(ApiRoutes.QUERY_TO, to.toString())
-        }.body()
+    suspend fun getTodos(from: Instant, to: Instant): List<TodoDto> = client.get(ApiRoutes.TODOS) {
+        parameter(ApiRoutes.QUERY_FROM, from.toString())
+        parameter(ApiRoutes.QUERY_TO, to.toString())
+    }.body()
 
     suspend fun getTodo(id: String): TodoDto = client.get(ApiRoutes.todo(id)).body()
 
-    suspend fun create(input: TodoInputDto): TodoDto =
-        client.post(ApiRoutes.TODOS) { jsonBody(input) }.body()
+    suspend fun create(input: TodoInputDto): TodoDto = client.post(ApiRoutes.TODOS) { jsonBody(input) }.body()
 
-    suspend fun update(id: String, input: TodoInputDto): TodoDto =
-        client.put(ApiRoutes.todo(id)) { jsonBody(input) }.body()
+    suspend fun update(id: String, input: TodoInputDto): TodoDto = client.put(ApiRoutes.todo(id)) { jsonBody(input) }.body()
 
     suspend fun delete(id: String) {
         client.delete(ApiRoutes.todo(id))

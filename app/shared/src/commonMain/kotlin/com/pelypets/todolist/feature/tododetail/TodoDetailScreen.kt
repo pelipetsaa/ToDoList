@@ -37,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -83,11 +84,12 @@ fun TodoDetailRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val currentOnClose by rememberUpdatedState(onClose)
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                TodoDetailEffect.Close -> onClose()
+                TodoDetailEffect.Close -> currentOnClose()
                 is TodoDetailEffect.ShowError -> snackbarHostState.showSnackbar(getString(effect.error.text))
             }
         }
@@ -97,11 +99,7 @@ fun TodoDetailRoute(
 }
 
 @Composable
-fun TodoDetailScreen(
-    state: TodoDetailState,
-    snackbarHostState: SnackbarHostState,
-    onIntent: (TodoDetailIntent) -> Unit,
-) {
+fun TodoDetailScreen(state: TodoDetailState, snackbarHostState: SnackbarHostState, onIntent: (TodoDetailIntent) -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -125,6 +123,7 @@ fun TodoDetailScreen(
         Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.TopCenter) {
             when {
                 state.isLoading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+
                 state.loadError != null -> Column(
                     modifier = Modifier.align(Alignment.Center).padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -133,6 +132,7 @@ fun TodoDetailScreen(
                     Text(stringResource(state.loadError.text), style = MaterialTheme.typography.titleMedium)
                     Button(onClick = { onIntent(TodoDetailIntent.Retry) }) { Text(stringResource(Res.string.retry)) }
                 }
+
                 else -> TodoForm(state, onIntent)
             }
         }
@@ -219,13 +219,7 @@ private fun TodoForm(state: TodoDetailState, onIntent: (TodoDetailIntent) -> Uni
 
 /** A read-only text field that opens a picker; the overlay keeps the field from taking focus. */
 @Composable
-private fun PickerField(
-    label: String,
-    value: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun PickerField(label: String, value: String, enabled: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(modifier) {
         OutlinedTextField(
             value = value,

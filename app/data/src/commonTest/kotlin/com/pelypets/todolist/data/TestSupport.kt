@@ -27,10 +27,7 @@ class InMemoryTokenStorage(initial: StoredTokens? = null) : TokenStorage {
     }
 }
 
-class TestEnvironment(
-    initialTokens: StoredTokens? = null,
-    handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData,
-) {
+class TestEnvironment(initialTokens: StoredTokens? = null, handler: suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData) {
     val requests = mutableListOf<HttpRequestData>()
     val storage = InMemoryTokenStorage(initialTokens)
     val session = SessionManager(storage)

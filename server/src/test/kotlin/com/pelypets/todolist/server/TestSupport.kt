@@ -99,12 +99,7 @@ class ApiTestScope(val client: HttpClient) {
         return response.body()
     }
 
-    suspend fun createTodo(
-        token: String,
-        title: String,
-        dueAt: String,
-        status: TodoStatusDto = TodoStatusDto.TODO,
-    ): TodoDto {
+    suspend fun createTodo(token: String, title: String, dueAt: String, status: TodoStatusDto = TodoStatusDto.TODO): TodoDto {
         val response = client.post(ApiRoutes.TODOS) {
             bearerAuth(token)
             json(TodoInputDto(title = title, description = "", dueAt = Instant.parse(dueAt), status = status))

@@ -24,9 +24,11 @@ object LoginReducer {
                 emailError = emailErrorFrom(error.errors),
                 passwordError = passwordErrorFrom(error.errors),
             )
+
             error == DomainError.Unauthorized -> state.copy(
                 error = if (mutation.viaGoogle) LoginError.GoogleFailed else LoginError.InvalidCredentials,
             )
+
             else -> state.copy(error = LoginError.Other(error))
         }
     }

@@ -134,7 +134,7 @@ Errors are returned as `{"code": "...", "message": "..."}` with codes `VALIDATIO
 | Module | What is covered |
 |--------|-----------------|
 | `core` | DTO serialization contract |
-| `server` | Auth flows (register, login, Google, refresh rotation, logout), todo CRUD, period filter, user isolation, error codes — against a real PostgreSQL |
+| `server` | Auth flows (register, login, Google, refresh rotation, logout), rate limiting, production config checks, todo CRUD, period filter, user isolation, error codes — against a real PostgreSQL |
 | `app/domain` | Period boundaries (week start, month and year changes), validation, use cases |
 | `app/data` | Requests and mapping via `MockEngine`, HTTP → domain error mapping, transparent token refresh, session end on failed refresh |
 | `app/shared` | Reducers and ViewModels of every screen |
@@ -142,10 +142,28 @@ Errors are returned as `{"code": "...", "message": "..."}` with codes `VALIDATIO
 With Colima instead of Docker Desktop, point Testcontainers to its socket:
 `export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"`.
 
-## CI
+## Code quality
+
+```bash
+./gradlew spotlessApply            # format with ktlint (+ Compose rules); spotlessCheck only verifies
+./gradlew :app:androidApp:lintDebug # Android Lint; errors fail the build
+./gradlew koverHtmlReport          # merged coverage report in build/reports/kover/html
+```
+
+Formatting rules live in [`.editorconfig`](.editorconfig) and match Android Studio's Kotlin style.
+
+## CI/CD
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request:
 
-- **server** (Linux): contract and server tests with Testcontainers.
-- **android** (Linux): domain, data and shared tests, then builds the debug APK (uploaded as an artifact).
+- **quality** (Linux): ktlint formatting check and Android Lint.
+- **server** (Linux): contract and server tests with Testcontainers, coverage report.
+- **docker** (Linux): builds the server image that Render deploys.
+- **android** (Linux): domain, data and shared tests with coverage, the debug APK (uploaded as an artifact)
+  and a minified release build.
 - **ios** (macOS): the same shared tests on the iOS simulator, plus linking the iOS framework.
+
+When all checks pass on `main`, Render deploys the server ([docs/deploy.md](docs/deploy.md)).
+Pushing a `v*` tag runs [`.github/workflows/release.yml`](.github/workflows/release.yml), which builds a signed
+Android APK and App Bundle and publishes a GitHub release ([docs/release.md](docs/release.md)).
+[Dependabot](.github/dependabot.yml) opens weekly pull requests for Gradle, GitHub Actions and Docker updates.

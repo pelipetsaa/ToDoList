@@ -55,6 +55,7 @@ class TodoDetailViewModel(
                 is DomainResult.Success -> with(result.value) {
                     reduce(TodoDetailMutation.Loaded(title, description, dueAt.toLocalDateTime(timeZone), status))
                 }
+
                 is DomainResult.Failure -> reduce(TodoDetailMutation.LoadFailed(result.error))
             }
         }
@@ -77,6 +78,7 @@ class TodoDetailViewModel(
         viewModelScope.launch {
             when (val result = saveTodo(state.todoId, draft)) {
                 is DomainResult.Success -> sendEffect(TodoDetailEffect.Close)
+
                 is DomainResult.Failure -> {
                     reduce(TodoDetailMutation.SaveFailed(result.error))
                     if (result.error.isReportable()) sendEffect(TodoDetailEffect.ShowError(result.error))
@@ -92,6 +94,7 @@ class TodoDetailViewModel(
         viewModelScope.launch {
             when (val result = deleteTodo(id)) {
                 is DomainResult.Success -> sendEffect(TodoDetailEffect.Close)
+
                 is DomainResult.Failure -> {
                     reduce(TodoDetailMutation.DeleteFailed)
                     if (result.error.isReportable()) sendEffect(TodoDetailEffect.ShowError(result.error))

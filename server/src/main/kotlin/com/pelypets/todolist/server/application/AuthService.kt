@@ -84,8 +84,7 @@ class AuthService(
         refreshTokens.deleteByHash(refreshTokenGenerator.hash(refreshToken))
     }
 
-    suspend fun currentUser(userId: UUID): User =
-        users.findById(userId) ?: throw UnauthorizedException("User no longer exists")
+    suspend fun currentUser(userId: UUID): User = users.findById(userId) ?: throw UnauthorizedException("User no longer exists")
 
     private suspend fun issueTokens(userId: UUID): TokenPair {
         val refreshToken = refreshTokenGenerator.generate()

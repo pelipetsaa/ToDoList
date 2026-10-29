@@ -3,10 +3,7 @@ package com.pelypets.todolist.core.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ErrorResponse(
-    val code: String,
-    val message: String,
-)
+data class ErrorResponse(val code: String, val message: String)
 
 object ErrorCodes {
     const val VALIDATION_ERROR = "VALIDATION_ERROR"
@@ -18,6 +15,4 @@ object ErrorCodes {
 }
 
 @Serializable
-data class HealthDto(
-    val status: String,
-)
+data class HealthDto(val status: String)

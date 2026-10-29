@@ -1,0 +1,25 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.{kt,kts}]
+max_line_length = 140
+# Matches kotlin.code.style=official in IntelliJ / Android Studio.
+ktlint_code_style = intellij_idea
+ij_kotlin_allow_trailing_comma = true
+ij_kotlin_allow_trailing_comma_on_call_site = true
+# Composable functions are PascalCase by convention.
+ktlint_function_naming_ignore_when_annotated_with = Composable
+# Google sign-in is provided per platform (Android activity, iOS bridge) through a CompositionLocal.
+compose_allowed_composition_locals = LocalGoogleSignInProvider
+# Screen composables fill the window and are only placed by the navigation host, so they take no Modifier.
+ktlint_compose_modifier-missing-check = disabled

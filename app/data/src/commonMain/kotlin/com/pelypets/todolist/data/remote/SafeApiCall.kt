@@ -9,18 +9,17 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.CancellationException
 import kotlinx.io.IOException
 
-internal suspend inline fun <T> safeApiCall(crossinline block: suspend () -> T): DomainResult<T> =
-    try {
-        DomainResult.Success(block())
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: ResponseException) {
-        DomainResult.Failure(e.toDomainError())
-    } catch (e: IOException) {
-        DomainResult.Failure(DomainError.Network)
-    } catch (e: Exception) {
-        DomainResult.Failure(DomainError.Unknown(e.message))
-    }
+internal suspend inline fun <T> safeApiCall(crossinline block: suspend () -> T): DomainResult<T> = try {
+    DomainResult.Success(block())
+} catch (e: CancellationException) {
+    throw e
+} catch (e: ResponseException) {
+    DomainResult.Failure(e.toDomainError())
+} catch (e: IOException) {
+    DomainResult.Failure(DomainError.Network)
+} catch (e: Exception) {
+    DomainResult.Failure(DomainError.Unknown(e.message))
+}
 
 internal suspend fun ResponseException.toDomainError(): DomainError {
     val message = runCatching { response.body<ErrorResponse>().message }.getOrNull()

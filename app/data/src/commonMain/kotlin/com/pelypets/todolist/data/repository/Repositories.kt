@@ -19,11 +19,8 @@ import com.pelypets.todolist.domain.repository.AuthRepository
 import com.pelypets.todolist.domain.repository.TodoRepository
 import io.ktor.client.HttpClient
 
-class AuthRepositoryImpl(
-    private val api: AuthApi,
-    private val session: SessionManager,
-    private val httpClient: HttpClient,
-) : AuthRepository {
+class AuthRepositoryImpl(private val api: AuthApi, private val session: SessionManager, private val httpClient: HttpClient) :
+    AuthRepository {
 
     override suspend fun login(email: String, password: String): DomainResult<Unit> =
         authenticate { api.login(EmailCredentialsDto(email, password)) }
@@ -31,8 +28,7 @@ class AuthRepositoryImpl(
     override suspend fun register(email: String, password: String): DomainResult<Unit> =
         authenticate { api.register(EmailCredentialsDto(email, password)) }
 
-    override suspend fun loginWithGoogle(idToken: String): DomainResult<Unit> =
-        authenticate { api.loginWithGoogle(idToken) }
+    override suspend fun loginWithGoogle(idToken: String): DomainResult<Unit> = authenticate { api.loginWithGoogle(idToken) }
 
     override suspend fun logout(): DomainResult<Unit> {
         session.currentTokens()?.refreshToken?.let { refreshToken ->
@@ -56,15 +52,11 @@ class TodoRepositoryImpl(private val api: TodoApi) : TodoRepository {
     override suspend fun getTodos(range: TimeRange): DomainResult<List<Todo>> =
         safeApiCall { api.getTodos(range.from, range.to).map { it.toDomain() } }
 
-    override suspend fun getTodo(id: String): DomainResult<Todo> =
-        safeApiCall { api.getTodo(id).toDomain() }
+    override suspend fun getTodo(id: String): DomainResult<Todo> = safeApiCall { api.getTodo(id).toDomain() }
 
-    override suspend fun create(draft: TodoDraft): DomainResult<Todo> =
-        safeApiCall { api.create(draft.toDto()).toDomain() }
+    override suspend fun create(draft: TodoDraft): DomainResult<Todo> = safeApiCall { api.create(draft.toDto()).toDomain() }
 
-    override suspend fun update(id: String, draft: TodoDraft): DomainResult<Todo> =
-        safeApiCall { api.update(id, draft.toDto()).toDomain() }
+    override suspend fun update(id: String, draft: TodoDraft): DomainResult<Todo> = safeApiCall { api.update(id, draft.toDto()).toDomain() }
 
-    override suspend fun delete(id: String): DomainResult<Unit> =
-        safeApiCall { api.delete(id) }
+    override suspend fun delete(id: String): DomainResult<Unit> = safeApiCall { api.delete(id) }
 }

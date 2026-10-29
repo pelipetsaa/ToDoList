@@ -25,10 +25,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 
-data class ApiConfig(
-    val baseUrl: String,
-    val enableLogging: Boolean = false,
-)
+data class ApiConfig(val baseUrl: String, val enableLogging: Boolean = false)
 
 internal val DataJson = Json {
     ignoreUnknownKeys = true
@@ -37,51 +34,50 @@ internal val DataJson = Json {
 
 object HttpClientFactory {
 
-    fun create(engine: HttpClientEngine, config: ApiConfig, session: SessionManager): HttpClient =
-        HttpClient(engine) {
-            expectSuccess = true
-            defaultRequest { url(config.baseUrl) }
-            install(ContentNegotiation) { json(DataJson) }
-            install(HttpTimeout) {
-                connectTimeoutMillis = 10_000
-                requestTimeoutMillis = 20_000
-            }
-            install(Auth) {
-                bearer {
-                    loadTokens {
-                        session.currentTokens()?.let { BearerTokens(it.accessToken, it.refreshToken) }
+    fun create(engine: HttpClientEngine, config: ApiConfig, session: SessionManager): HttpClient = HttpClient(engine) {
+        expectSuccess = true
+        defaultRequest { url(config.baseUrl) }
+        install(ContentNegotiation) { json(DataJson) }
+        install(HttpTimeout) {
+            connectTimeoutMillis = 10_000
+            requestTimeoutMillis = 20_000
+        }
+        install(Auth) {
+            bearer {
+                loadTokens {
+                    session.currentTokens()?.let { BearerTokens(it.accessToken, it.refreshToken) }
+                }
+                sendWithoutRequest { request ->
+                    !request.url.encodedPath.startsWith("${ApiRoutes.BASE}/auth")
+                }
+                refreshTokens {
+                    val refreshToken = oldTokens?.refreshToken ?: session.currentTokens()?.refreshToken
+                    if (refreshToken == null) {
+                        session.end()
+                        return@refreshTokens null
                     }
-                    sendWithoutRequest { request ->
-                        !request.url.encodedPath.startsWith("${ApiRoutes.BASE}/auth")
-                    }
-                    refreshTokens {
-                        val refreshToken = oldTokens?.refreshToken ?: session.currentTokens()?.refreshToken
-                        if (refreshToken == null) {
-                            session.end()
-                            return@refreshTokens null
-                        }
-                        try {
-                            val pair = client.post(ApiRoutes.AUTH_REFRESH) {
-                                markAsRefreshTokenRequest()
-                                jsonBody(RefreshTokenDto(refreshToken))
-                            }.body<TokenPairDto>()
-                            session.start(pair.toStoredTokens())
-                            BearerTokens(pair.accessToken, pair.refreshToken)
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (e: ResponseException) {
-                            session.end()
-                            null
-                        } catch (e: Exception) {
-                            null
-                        }
+                    try {
+                        val pair = client.post(ApiRoutes.AUTH_REFRESH) {
+                            markAsRefreshTokenRequest()
+                            jsonBody(RefreshTokenDto(refreshToken))
+                        }.body<TokenPairDto>()
+                        session.start(pair.toStoredTokens())
+                        BearerTokens(pair.accessToken, pair.refreshToken)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: ResponseException) {
+                        session.end()
+                        null
+                    } catch (e: Exception) {
+                        null
                     }
                 }
             }
-            if (config.enableLogging) {
-                install(Logging) { level = LogLevel.INFO }
-            }
         }
+        if (config.enableLogging) {
+            install(Logging) { level = LogLevel.INFO }
+        }
+    }
 }
 
 /** The Auth plugin caches tokens in memory; call this whenever the stored tokens change outside a refresh. */

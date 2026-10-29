@@ -9,11 +9,16 @@ object RegisterReducer {
 
     fun reduce(state: RegisterState, mutation: RegisterMutation): RegisterState = when (mutation) {
         is RegisterMutation.EmailChanged -> state.copy(email = mutation.value, emailError = null, error = null)
+
         is RegisterMutation.PasswordChanged -> state.copy(password = mutation.value, passwordError = null, error = null)
+
         is RegisterMutation.ConfirmPasswordChanged ->
             state.copy(confirmPassword = mutation.value, confirmPasswordError = null, error = null)
+
         RegisterMutation.SubmitStarted -> state.copy(isSubmitting = true, error = null)
+
         RegisterMutation.Succeeded -> state.copy(isSubmitting = false)
+
         is RegisterMutation.Failed -> failed(state.copy(isSubmitting = false), mutation.error)
     }
 
@@ -23,7 +28,9 @@ object RegisterReducer {
             passwordError = passwordErrorFrom(error.errors),
             confirmPasswordError = confirmPasswordErrorFrom(error.errors),
         )
+
         error == DomainError.Conflict -> state.copy(error = RegisterError.EmailTaken)
+
         else -> state.copy(error = RegisterError.Other(error))
     }
 }

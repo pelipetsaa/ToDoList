@@ -14,9 +14,8 @@ enum class AppEnvironment {
     ;
 
     companion object {
-        fun parse(value: String?): AppEnvironment =
-            entries.firstOrNull { it.name.equals(value?.trim(), ignoreCase = true) }
-                ?: error("APP_ENV must be 'development' or 'production', got '$value'")
+        fun parse(value: String?): AppEnvironment = entries.firstOrNull { it.name.equals(value?.trim(), ignoreCase = true) }
+            ?: error("APP_ENV must be 'development' or 'production', got '$value'")
     }
 }
 
@@ -80,12 +79,7 @@ internal fun resolveJwtSecret(value: String?, environment: AppEnvironment): Stri
     return value
 }
 
-data class DatabaseConfig(
-    val url: String,
-    val user: String,
-    val password: String,
-    val maxPoolSize: Int = 10,
-)
+data class DatabaseConfig(val url: String, val user: String, val password: String, val maxPoolSize: Int = 10)
 
 data class JwtConfig(
     val secret: String,
@@ -96,9 +90,7 @@ data class JwtConfig(
     val refreshTokenTtlDays: Long,
 )
 
-data class GoogleConfig(
-    val clientIds: List<String>,
-)
+data class GoogleConfig(val clientIds: List<String>)
 
 data class RateLimitConfig(
     /** Requests per client IP per minute across all /auth endpoints. */

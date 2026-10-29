@@ -30,10 +30,7 @@ import com.pelypets.todolist.domain.error.ValidationError
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun AuthLayout(
-    contentPadding: PaddingValues,
-    content: @Composable ColumnScope.() -> Unit,
-) {
+internal fun AuthLayout(contentPadding: PaddingValues, content: @Composable ColumnScope.() -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()

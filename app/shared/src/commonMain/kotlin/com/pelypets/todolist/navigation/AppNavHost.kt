@@ -20,10 +20,7 @@ import com.pelypets.todolist.feature.todolist.TodoListRoute
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun AppNavHost(
-    navController: NavHostController = rememberNavController(),
-    authGate: AuthGateViewModel = koinViewModel(),
-) {
+fun AppNavHost(navController: NavHostController = rememberNavController(), authGate: AuthGateViewModel = koinViewModel()) {
     val session by authGate.session.collectAsStateWithLifecycle()
     val startDestination = remember { session.home }
 

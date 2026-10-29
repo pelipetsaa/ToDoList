@@ -6,9 +6,8 @@ import com.pelypets.todolist.domain.DomainResult
 import com.pelypets.todolist.domain.usecase.RegisterUseCase
 import kotlinx.coroutines.launch
 
-class RegisterViewModel(
-    private val register: RegisterUseCase,
-) : MviViewModel<RegisterState, RegisterIntent, RegisterEffect>(RegisterState()) {
+class RegisterViewModel(private val register: RegisterUseCase) :
+    MviViewModel<RegisterState, RegisterIntent, RegisterEffect>(RegisterState()) {
 
     override fun onIntent(intent: RegisterIntent) {
         when (intent) {

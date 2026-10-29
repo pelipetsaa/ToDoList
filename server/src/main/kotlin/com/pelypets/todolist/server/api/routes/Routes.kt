@@ -87,13 +87,11 @@ fun Route.todoRoutes(todoService: TodoService) {
     }
 }
 
-private fun RoutingCall.userId(): UUID =
-    principal<JWTPrincipal>()?.subject?.let(UUID::fromString) ?: throw UnauthorizedException()
+private fun RoutingCall.userId(): UUID = principal<JWTPrincipal>()?.subject?.let(UUID::fromString) ?: throw UnauthorizedException()
 
-private fun RoutingCall.todoId(): UUID =
-    parameters[ApiRoutes.TODO_ID_PARAM]
-        ?.let { runCatching { UUID.fromString(it) }.getOrNull() }
-        ?: throw NotFoundException("Todo not found")
+private fun RoutingCall.todoId(): UUID = parameters[ApiRoutes.TODO_ID_PARAM]
+    ?.let { runCatching { UUID.fromString(it) }.getOrNull() }
+    ?: throw NotFoundException("Todo not found")
 
 private fun RoutingCall.instantQuery(name: String): Instant {
     val raw = request.queryParameters[name] ?: throw ValidationException("Query parameter '$name' is required")

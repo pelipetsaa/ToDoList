@@ -117,9 +117,5 @@ class FakeTodoRepository : TodoRepository {
     private fun TodoDraft.toTodo(id: String) = Todo(id, title, description, dueAt, status)
 }
 
-fun todo(
-    id: String,
-    dueAt: String,
-    title: String = "Todo $id",
-    status: TodoStatus = TodoStatus.TODO,
-) = Todo(id, title, description = "", dueAt = Instant.parse(dueAt), status = status)
+fun todo(id: String, dueAt: String, title: String = "Todo $id", status: TodoStatus = TodoStatus.TODO) =
+    Todo(id, title, description = "", dueAt = Instant.parse(dueAt), status = status)

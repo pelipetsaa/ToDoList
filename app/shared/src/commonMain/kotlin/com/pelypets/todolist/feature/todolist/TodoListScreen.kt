@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -65,18 +66,16 @@ import todolist.app.shared.generated.resources.retry
 import todolist.app.shared.generated.resources.todos_title
 
 @Composable
-fun TodoListRoute(
-    onOpenTodo: (id: String?) -> Unit,
-    viewModel: TodoListViewModel = koinViewModel(),
-) {
+fun TodoListRoute(onOpenTodo: (id: String?) -> Unit, viewModel: TodoListViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val currentOnOpenTodo by rememberUpdatedState(onOpenTodo)
 
     LaunchedEffect(Unit) { viewModel.onIntent(TodoListIntent.ScreenShown) }
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                is TodoListEffect.OpenTodo -> onOpenTodo(effect.id)
+                is TodoListEffect.OpenTodo -> currentOnOpenTodo(effect.id)
                 is TodoListEffect.ShowError -> snackbarHostState.showSnackbar(getString(effect.error.text))
             }
         }
@@ -86,11 +85,7 @@ fun TodoListRoute(
 }
 
 @Composable
-fun TodoListScreen(
-    state: TodoListState,
-    snackbarHostState: SnackbarHostState,
-    onIntent: (TodoListIntent) -> Unit,
-) {
+fun TodoListScreen(state: TodoListState, snackbarHostState: SnackbarHostState, onIntent: (TodoListIntent) -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -128,14 +123,17 @@ fun TodoListScreen(
                     state.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
+
                     state.error != null -> Placeholder(
                         title = stringResource(state.error.text),
                         action = stringResource(Res.string.retry) to { onIntent(TodoListIntent.Retry) },
                     )
+
                     state.hasLoaded && state.todos.isEmpty() -> Placeholder(
                         title = stringResource(state.period.emptyText),
                         subtitle = stringResource(Res.string.empty_hint),
                     )
+
                     else -> TodoList(state.todos, onClick = { onIntent(TodoListIntent.TodoClicked(it)) })
                 }
             }
@@ -179,11 +177,7 @@ private fun TodoRow(todo: Todo, timeZone: TimeZone, onClick: () -> Unit) {
 
 /** Scrollable so that pull-to-refresh also works on empty and error states. */
 @Composable
-private fun Placeholder(
-    title: String,
-    subtitle: String? = null,
-    action: Pair<String, () -> Unit>? = null,
-) {
+private fun Placeholder(title: String, subtitle: String? = null, action: Pair<String, () -> Unit>? = null) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

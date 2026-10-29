@@ -2,35 +2,18 @@ package com.pelypets.todolist.domain.model
 
 import kotlin.time.Instant
 
-data class User(
-    val id: String,
-    val email: String,
-)
+data class User(val id: String, val email: String)
 
 enum class TodoStatus { TODO, IN_PROGRESS, DONE }
 
-data class Todo(
-    val id: String,
-    val title: String,
-    val description: String,
-    val dueAt: Instant,
-    val status: TodoStatus,
-)
+data class Todo(val id: String, val title: String, val description: String, val dueAt: Instant, val status: TodoStatus)
 
-data class TodoDraft(
-    val title: String,
-    val description: String,
-    val dueAt: Instant,
-    val status: TodoStatus,
-)
+data class TodoDraft(val title: String, val description: String, val dueAt: Instant, val status: TodoStatus)
 
 enum class Period { TODAY, WEEK, MONTH }
 
 /** Half-open interval `[from, to)`. */
-data class TimeRange(
-    val from: Instant,
-    val to: Instant,
-) {
+data class TimeRange(val from: Instant, val to: Instant) {
     init {
         require(from < to) { "from must be before to" }
     }

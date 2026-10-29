@@ -7,10 +7,8 @@ import com.pelypets.todolist.domain.usecase.LoginWithEmailUseCase
 import com.pelypets.todolist.domain.usecase.LoginWithGoogleUseCase
 import kotlinx.coroutines.launch
 
-class LoginViewModel(
-    private val loginWithEmail: LoginWithEmailUseCase,
-    private val loginWithGoogle: LoginWithGoogleUseCase,
-) : MviViewModel<LoginState, LoginIntent, LoginEffect>(LoginState()) {
+class LoginViewModel(private val loginWithEmail: LoginWithEmailUseCase, private val loginWithGoogle: LoginWithGoogleUseCase) :
+    MviViewModel<LoginState, LoginIntent, LoginEffect>(LoginState()) {
 
     override fun onIntent(intent: LoginIntent) {
         when (intent) {

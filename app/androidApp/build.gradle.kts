@@ -75,7 +75,7 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -86,6 +86,13 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    lint {
+        // Errors fail the build; warnings stay in the report (build/reports/lint-results-*.html).
+        abortOnError = true
+        checkDependencies = true
+        // Dependency updates are proposed by Dependabot instead.
+        disable += setOf("NewerVersionAvailable", "AndroidGradlePluginVersion", "GradleDependency")
     }
 }
 
