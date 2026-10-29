@@ -70,6 +70,7 @@ Debug builds keep using the local server.
 | `GET /health` | Liveness: the process is up |
 | `GET /health/ready` | Readiness: the database answers; Render's health check uses it, so a deploy that cannot reach the database never replaces a working instance |
 | `GET /metrics` | Prometheus metrics (request timings by route and status, JVM memory, GC, threads); only with `METRICS_TOKEN` in production |
+| `GET /docs` | Swagger UI for the REST API ([`openapi/documentation.yaml`](../server/src/main/resources/openapi/documentation.yaml)) |
 
 Logs in the Docker image are JSON, one object per line, with the request's `call-id` (also returned to clients
 as `X-Request-Id`) as a field, so a single request can be followed through Render's log search. Local runs keep the

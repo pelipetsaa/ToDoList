@@ -107,6 +107,9 @@ Step-by-step setup: [docs/deploy.md](docs/deploy.md).
 
 ## REST API (`/api/v1`)
 
+The full contract is the OpenAPI spec [`openapi/documentation.yaml`](server/src/main/resources/openapi/documentation.yaml),
+browsable as Swagger UI at [`/docs`](https://todolist-server-zyck.onrender.com/docs) (locally `http://localhost:8080/docs`).
+
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | POST | `/auth/register` | – | Create an account, returns a token pair |
@@ -118,10 +121,11 @@ Step-by-step setup: [docs/deploy.md](docs/deploy.md).
 | GET | `/todos?from=&to=` | Bearer | Todos with `dueAt` in `[from, to)` |
 | GET / PUT / DELETE | `/todos/{id}` | Bearer | Read, update, delete one todo |
 | POST | `/todos` | Bearer | Create a todo |
-| GET | `/health` | – | Liveness check |
+| GET | `/health`, `/health/ready` | – | Liveness; readiness including the database |
 
 Errors are returned as `{"code": "...", "message": "..."}` with codes `VALIDATION_ERROR`, `UNAUTHORIZED`,
-`NOT_FOUND`, `EMAIL_TAKEN`, `INTERNAL_ERROR`. A todo owned by another user is reported as `NOT_FOUND`.
+`NOT_FOUND`, `EMAIL_TAKEN`, `TOO_MANY_REQUESTS`, `INTERNAL_ERROR`. A todo owned by another user is reported as
+`NOT_FOUND`.
 
 ## Tests
 

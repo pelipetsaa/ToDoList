@@ -25,10 +25,15 @@ import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.netty.EngineMain
 import io.ktor.server.plugins.ratelimit.rateLimit
+import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.routing.routing
 import org.koin.core.module.Module
 import org.koin.ktor.ext.get
 import org.koin.ktor.plugin.KoinIsolated
+
+/** Swagger UI for [OPENAPI_SPEC], a hand-written spec kept in sync with the routes by OpenApiSpecTest. */
+const val API_DOCS_PATH = "docs"
+const val OPENAPI_SPEC = "openapi/documentation.yaml"
 
 fun main(args: Array<String>) = EngineMain.main(args)
 
@@ -55,6 +60,7 @@ fun Application.configureApp(config: AppConfig, overrides: List<Module> = emptyL
     configureMetrics(config.metricsToken, config.environment)
 
     routing {
+        swaggerUI(path = API_DOCS_PATH, swaggerFile = OPENAPI_SPEC)
         healthRoutes(database)
         rateLimit(AUTH_RATE_LIMIT) {
             authRoutes(authService)
