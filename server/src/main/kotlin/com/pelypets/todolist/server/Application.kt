@@ -1,7 +1,9 @@
 package com.pelypets.todolist.server
 
+import com.pelypets.todolist.server.api.plugins.AUTH_RATE_LIMIT
 import com.pelypets.todolist.server.api.plugins.JWT_AUTH
 import com.pelypets.todolist.server.api.plugins.configureMonitoring
+import com.pelypets.todolist.server.api.plugins.configureRateLimits
 import com.pelypets.todolist.server.api.plugins.configureSecurity
 import com.pelypets.todolist.server.api.plugins.configureSerialization
 import com.pelypets.todolist.server.api.plugins.configureStatusPages
@@ -21,6 +23,7 @@ import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.netty.EngineMain
+import io.ktor.server.plugins.ratelimit.rateLimit
 import io.ktor.server.routing.routing
 import org.koin.core.module.Module
 import org.koin.ktor.ext.get
@@ -46,11 +49,14 @@ fun Application.configureApp(config: AppConfig, overrides: List<Module> = emptyL
     configureMonitoring()
     configureStatusPages()
     configureValidation()
+    configureRateLimits(config.rateLimit, config.trustProxy)
     configureSecurity(config.jwt, get<JwtAccessTokenIssuer>().verifier)
 
     routing {
         healthRoutes()
-        authRoutes(authService)
+        rateLimit(AUTH_RATE_LIMIT) {
+            authRoutes(authService)
+        }
         authenticate(JWT_AUTH) {
             meRoutes(authService)
             todoRoutes(todoService)

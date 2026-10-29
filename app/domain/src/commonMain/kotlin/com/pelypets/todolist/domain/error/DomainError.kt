@@ -8,6 +8,9 @@ sealed interface DomainError {
     /** The resource conflicts with an existing one, e.g. the email is already registered. */
     data object Conflict : DomainError
 
+    /** The server throttled the client, e.g. after too many sign-in attempts. */
+    data object TooManyRequests : DomainError
+
     data class Validation(
         val errors: List<ValidationError> = emptyList(),
         val serverMessage: String? = null,

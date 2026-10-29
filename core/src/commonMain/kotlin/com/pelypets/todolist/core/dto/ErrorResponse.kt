@@ -13,6 +13,7 @@ object ErrorCodes {
     const val UNAUTHORIZED = "UNAUTHORIZED"
     const val NOT_FOUND = "NOT_FOUND"
     const val EMAIL_TAKEN = "EMAIL_TAKEN"
+    const val TOO_MANY_REQUESTS = "TOO_MANY_REQUESTS"
     const val INTERNAL_ERROR = "INTERNAL_ERROR"
 }
 

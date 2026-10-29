@@ -30,6 +30,8 @@ dependencies {
     implementation(libs.ktor.serverRequestValidation)
     implementation(libs.ktor.serverCallLogging)
     implementation(libs.ktor.serverCallId)
+    implementation(libs.ktor.serverRateLimit)
+    implementation(libs.ktor.serverForwardedHeader)
     implementation(libs.koin.ktor)
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)

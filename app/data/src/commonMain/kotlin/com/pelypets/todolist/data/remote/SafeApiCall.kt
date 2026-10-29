@@ -29,6 +29,7 @@ internal suspend fun ResponseException.toDomainError(): DomainError {
         HttpStatusCode.Unauthorized -> DomainError.Unauthorized
         HttpStatusCode.NotFound -> DomainError.NotFound
         HttpStatusCode.Conflict -> DomainError.Conflict
+        HttpStatusCode.TooManyRequests -> DomainError.TooManyRequests
         else -> DomainError.Unknown(message ?: "HTTP ${response.status.value}")
     }
 }

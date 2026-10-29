@@ -9,6 +9,7 @@ import todolist.app.shared.generated.resources.Res
 import todolist.app.shared.generated.resources.error_conflict
 import todolist.app.shared.generated.resources.error_network
 import todolist.app.shared.generated.resources.error_not_found
+import todolist.app.shared.generated.resources.error_too_many_requests
 import todolist.app.shared.generated.resources.error_unauthorized
 import todolist.app.shared.generated.resources.error_unknown
 import todolist.app.shared.generated.resources.error_validation
@@ -34,6 +35,7 @@ val DomainError.text: StringResource
         DomainError.Unauthorized -> Res.string.error_unauthorized
         DomainError.NotFound -> Res.string.error_not_found
         DomainError.Conflict -> Res.string.error_conflict
+        DomainError.TooManyRequests -> Res.string.error_too_many_requests
         is DomainError.Validation -> Res.string.error_validation
         is DomainError.Unknown -> Res.string.error_unknown
     }

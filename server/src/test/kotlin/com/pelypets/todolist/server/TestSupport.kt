@@ -9,9 +9,11 @@ import com.pelypets.todolist.core.dto.TodoStatusDto
 import com.pelypets.todolist.core.dto.TokenPairDto
 import com.pelypets.todolist.server.api.plugins.AppJson
 import com.pelypets.todolist.server.config.AppConfig
+import com.pelypets.todolist.server.config.AppEnvironment
 import com.pelypets.todolist.server.config.DatabaseConfig
 import com.pelypets.todolist.server.config.GoogleConfig
 import com.pelypets.todolist.server.config.JwtConfig
+import com.pelypets.todolist.server.config.RateLimitConfig
 import com.pelypets.todolist.server.domain.model.GoogleIdentity
 import com.pelypets.todolist.server.domain.port.GoogleTokenVerifier
 import com.pelypets.todolist.server.infrastructure.db.AppDatabase
@@ -60,7 +62,8 @@ class FakeGoogleTokenVerifier : GoogleTokenVerifier {
     override suspend fun verify(idToken: String): GoogleIdentity? = identities[idToken]
 }
 
-fun testAppConfig() = AppConfig(
+fun testAppConfig(rateLimit: RateLimitConfig = RateLimitConfig(authRequestsPerMinute = 1_000)) = AppConfig(
+    environment = AppEnvironment.DEVELOPMENT,
     database = TestDatabase.config,
     jwt = JwtConfig(
         secret = "test-secret-test-secret-test-secret",
@@ -71,15 +74,18 @@ fun testAppConfig() = AppConfig(
         refreshTokenTtlDays = 30,
     ),
     google = GoogleConfig(clientIds = emptyList()),
+    rateLimit = rateLimit,
+    trustProxy = false,
 )
 
 fun apiTest(
     google: FakeGoogleTokenVerifier = FakeGoogleTokenVerifier(),
+    config: AppConfig = testAppConfig(),
     block: suspend ApiTestScope.() -> Unit,
 ) = testApplication {
-    environment { config = MapApplicationConfig() }
+    environment { this.config = MapApplicationConfig() }
     application {
-        configureApp(testAppConfig(), listOf(module { single<GoogleTokenVerifier> { google } }))
+        configureApp(config, listOf(module { single<GoogleTokenVerifier> { google } }))
     }
     val client = createClient { install(ContentNegotiation) { json(AppJson) } }
     ApiTestScope(client).block()

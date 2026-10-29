@@ -8,6 +8,7 @@ import com.pelypets.todolist.core.dto.HealthDto
 import com.pelypets.todolist.core.dto.RefreshTokenDto
 import com.pelypets.todolist.core.dto.TokenPairDto
 import com.pelypets.todolist.core.dto.UserDto
+import com.pelypets.todolist.server.config.RateLimitConfig
 import com.pelypets.todolist.server.domain.model.GoogleIdentity
 import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
@@ -147,4 +148,19 @@ class AuthApiTest {
         client.post(ApiRoutes.AUTH_GOOGLE) { json(GoogleLoginDto(" ")) }
             .assertError(HttpStatusCode.BadRequest, ErrorCodes.VALIDATION_ERROR)
     }
+
+    @Test
+    fun `auth endpoints are rate limited while the rest of the api is not`() =
+        apiTest(config = testAppConfig(rateLimit = RateLimitConfig(authRequestsPerMinute = 3))) {
+            val token = register().accessToken
+            repeat(2) {
+                client.post(ApiRoutes.AUTH_LOGIN) { json(EmailCredentialsDto("user@example.com", "password123")) }
+                    .also { assertEquals(HttpStatusCode.OK, it.status) }
+            }
+
+            client.post(ApiRoutes.AUTH_LOGIN) { json(EmailCredentialsDto("user@example.com", "password123")) }
+                .assertError(HttpStatusCode.TooManyRequests, ErrorCodes.TOO_MANY_REQUESTS)
+
+            assertEquals(HttpStatusCode.OK, client.get(ApiRoutes.ME) { bearerAuth(token) }.status)
+        }
 }

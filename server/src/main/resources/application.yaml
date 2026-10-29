@@ -6,6 +6,15 @@ ktor:
     modules:
       - com.pelypets.todolist.server.ApplicationKt.module
 
+app:
+  # "development" (default) or "production". Production refuses to start without a real JWT_SECRET.
+  environment: "$APP_ENV:development"
+  # Set to true only behind a reverse proxy that sets X-Forwarded-For (e.g. Render), so rate limits see client IPs.
+  trustProxy: "$TRUST_PROXY:false"
+
+rateLimit:
+  authRequestsPerMinute: "$AUTH_RATE_LIMIT_PER_MINUTE:20"
+
 database:
   url: "$DB_URL:jdbc:postgresql://localhost:5434/todolist"
   user: "$DB_USER:todolist"
@@ -13,8 +22,8 @@ database:
   maxPoolSize: 10
 
 jwt:
-  # Override JWT_SECRET in every non-local environment.
-  secret: "$JWT_SECRET:dev-only-secret-change-me-please-32b"
+  # Required in production (at least 32 characters). Without it, development uses a built-in key.
+  secret: "$?JWT_SECRET"
   issuer: "todolist-server"
   audience: "todolist-clients"
   realm: "todolist"

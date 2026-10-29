@@ -5,6 +5,7 @@ import com.pelypets.todolist.core.dto.ErrorResponse
 import com.pelypets.todolist.core.dto.GoogleLoginDto
 import com.pelypets.todolist.core.dto.RefreshTokenDto
 import com.pelypets.todolist.server.config.JwtConfig
+import com.pelypets.todolist.server.config.RateLimitConfig
 import com.pelypets.todolist.server.domain.EmailTakenException
 import com.pelypets.todolist.server.domain.NotFoundException
 import com.pelypets.todolist.server.domain.UnauthorizedException
@@ -23,6 +24,10 @@ import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
+import io.ktor.server.plugins.origin
+import io.ktor.server.plugins.ratelimit.RateLimit
+import io.ktor.server.plugins.ratelimit.RateLimitName
 import io.ktor.server.plugins.requestvalidation.RequestValidation
 import io.ktor.server.plugins.requestvalidation.RequestValidationException
 import io.ktor.server.plugins.requestvalidation.ValidationResult
@@ -33,8 +38,10 @@ import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.util.UUID
+import kotlin.time.Duration.Companion.minutes
 
 const val JWT_AUTH = "auth-jwt"
+val AUTH_RATE_LIMIT = RateLimitName("auth")
 private const val REQUEST_ID_HEADER = "X-Request-Id"
 
 val AppJson = Json {
@@ -57,6 +64,22 @@ fun Application.configureMonitoring() {
         level = Level.INFO
         callIdMdc("call-id")
         filter { call -> call.request.path().startsWith("/api") }
+    }
+}
+
+/**
+ * Limits sign-in, sign-up and token endpoints per client IP to slow down password guessing.
+ * Behind a proxy ([trustProxy]) the client IP is the last X-Forwarded-For entry, the one the proxy appended itself.
+ */
+fun Application.configureRateLimits(config: RateLimitConfig, trustProxy: Boolean) {
+    if (trustProxy) {
+        install(XForwardedHeaders) { useLastProxy() }
+    }
+    install(RateLimit) {
+        register(AUTH_RATE_LIMIT) {
+            rateLimiter(limit = config.authRequestsPerMinute, refillPeriod = 1.minutes)
+            requestKey { call -> call.request.origin.remoteAddress }
+        }
     }
 }
 
@@ -112,6 +135,9 @@ fun Application.configureStatusPages() {
         }
         exception<EmailTakenException> { call, e ->
             call.respond(HttpStatusCode.Conflict, ErrorResponse(ErrorCodes.EMAIL_TAKEN, e.message.orEmpty()))
+        }
+        status(HttpStatusCode.TooManyRequests) { call, status ->
+            call.respond(status, ErrorResponse(ErrorCodes.TOO_MANY_REQUESTS, "Too many requests, try again later"))
         }
         exception<Throwable> { call, e ->
             logger.error("Unhandled error", e)

@@ -51,6 +51,7 @@ class RepositoriesTest {
         val cases = mapOf(
             HttpStatusCode.NotFound to DomainError.NotFound,
             HttpStatusCode.Conflict to DomainError.Conflict,
+            HttpStatusCode.TooManyRequests to DomainError.TooManyRequests,
             HttpStatusCode.BadRequest to DomainError.Validation(serverMessage = "bad"),
             HttpStatusCode.InternalServerError to DomainError.Unknown("bad"),
         )
