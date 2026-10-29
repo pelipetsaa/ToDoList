@@ -14,6 +14,7 @@ import com.pelypets.todolist.server.infrastructure.db.AppDatabase
 import com.pelypets.todolist.server.infrastructure.db.ExposedRefreshTokenRepository
 import com.pelypets.todolist.server.infrastructure.db.ExposedTodoRepository
 import com.pelypets.todolist.server.infrastructure.db.ExposedUserRepository
+import com.pelypets.todolist.server.infrastructure.db.MicrosecondClock
 import com.pelypets.todolist.server.infrastructure.security.BcryptPasswordHasher
 import com.pelypets.todolist.server.infrastructure.security.GoogleApiTokenVerifier
 import com.pelypets.todolist.server.infrastructure.security.JwtAccessTokenIssuer
@@ -26,7 +27,7 @@ import kotlin.time.Duration.Companion.days
 fun serverModule(config: AppConfig, database: AppDatabase) = module {
     single { config }
     single { database }
-    single<Clock> { Clock.System }
+    single<Clock> { MicrosecondClock() }
 
     single<UserRepository> { ExposedUserRepository(get()) }
     single<TodoRepository> { ExposedTodoRepository(get()) }
