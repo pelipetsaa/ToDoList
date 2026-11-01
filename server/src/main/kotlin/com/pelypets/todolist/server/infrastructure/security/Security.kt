@@ -1,6 +1,7 @@
 package com.pelypets.todolist.server.infrastructure.security
 
 import at.favre.lib.crypto.bcrypt.BCrypt
+import at.favre.lib.crypto.bcrypt.LongPasswordStrategies
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
@@ -25,14 +26,21 @@ import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaInstant
 
+/**
+ * bcrypt reads at most 72 bytes, and the library's default strategy throws for longer passwords, which a 128-character
+ * or a 40-letter Cyrillic password exceeds. Longer passwords are pre-hashed with SHA-512 instead; shorter ones are
+ * passed through unchanged, so existing hashes keep verifying.
+ */
 class BcryptPasswordHasher(private val cost: Int = 12) : PasswordHasher {
 
+    private val longPasswords = LongPasswordStrategies.hashSha512(BCrypt.Version.VERSION_2A)
+
     override suspend fun hash(raw: String): String = withContext(Dispatchers.Default) {
-        BCrypt.withDefaults().hashToString(cost, raw.toCharArray())
+        BCrypt.with(BCrypt.Version.VERSION_2A, longPasswords).hashToString(cost, raw.toCharArray())
     }
 
     override suspend fun verify(raw: String, hash: String): Boolean = withContext(Dispatchers.Default) {
-        BCrypt.verifyer().verify(raw.toCharArray(), hash).verified
+        BCrypt.verifyer(BCrypt.Version.VERSION_2A, longPasswords).verify(raw.toCharArray(), hash).verified
     }
 }
 

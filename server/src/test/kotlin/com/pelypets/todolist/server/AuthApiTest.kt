@@ -82,6 +82,38 @@ class AuthApiTest {
     }
 
     @Test
+    fun `passwords longer than bcrypt's 72 bytes can register and sign in`() = apiTest {
+        val latin = "a".repeat(128)
+        val cyrillic = "пароль".repeat(20) // 120 characters, 240 bytes in UTF-8
+        register(email = "latin@example.com", password = latin)
+        register(email = "cyrillic@example.com", password = cyrillic)
+
+        for ((email, password) in listOf("latin@example.com" to latin, "cyrillic@example.com" to cyrillic)) {
+            val ok = client.post(ApiRoutes.AUTH_LOGIN) { json(EmailCredentialsDto(email, password)) }
+            assertEquals(HttpStatusCode.OK, ok.status, "for $email")
+            // Same first 72 bytes, different tail: bcrypt alone would accept it.
+            client.post(ApiRoutes.AUTH_LOGIN) { json(EmailCredentialsDto(email, password.dropLast(1) + "x")) }
+                .assertError(HttpStatusCode.Unauthorized, ErrorCodes.UNAUTHORIZED)
+        }
+        client.post(ApiRoutes.AUTH_LOGIN) { json(EmailCredentialsDto("latin@example.com", "b".repeat(5_000))) }
+            .assertError(HttpStatusCode.Unauthorized, ErrorCodes.UNAUTHORIZED)
+    }
+
+    @Test
+    fun `sign in expires old refresh tokens of the user`() = apiTest {
+        register(email = "cleanup@example.com")
+        TestDatabase.execute(
+            "INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at) " +
+                "SELECT gen_random_uuid(), id, 'expired-hash', now() - interval '1 day' FROM users",
+        )
+
+        client.post(ApiRoutes.AUTH_LOGIN) { json(EmailCredentialsDto("cleanup@example.com", "password123")) }
+
+        assertEquals(0, TestDatabase.count("SELECT count(*) FROM refresh_tokens WHERE expires_at <= now()"))
+        assertEquals(2, TestDatabase.count("SELECT count(*) FROM refresh_tokens"))
+    }
+
+    @Test
     fun `protected endpoints require a valid access token`() = apiTest {
         client.get(ApiRoutes.ME).assertError(HttpStatusCode.Unauthorized, ErrorCodes.UNAUTHORIZED)
         client.get(ApiRoutes.ME) { bearerAuth("garbage") }
@@ -142,6 +174,43 @@ class AuthApiTest {
     }
 
     @Test
+    fun `linking google revokes the password and sessions of whoever registered the email first`() {
+        val google = FakeGoogleTokenVerifier().apply {
+            identities["owner-token"] = GoogleIdentity(subject = "g-owner", email = "victim@example.com")
+        }
+        apiTest(google) {
+            val squatter = register(email = "victim@example.com", password = "squatter-password")
+
+            val owner = client.post(ApiRoutes.AUTH_GOOGLE) { json(GoogleLoginDto("owner-token")) }
+            assertEquals(HttpStatusCode.OK, owner.status)
+
+            client.post(ApiRoutes.AUTH_LOGIN) { json(EmailCredentialsDto("victim@example.com", "squatter-password")) }
+                .assertError(HttpStatusCode.Unauthorized, ErrorCodes.UNAUTHORIZED)
+            client.post(ApiRoutes.AUTH_REFRESH) { json(RefreshTokenDto(squatter.refreshToken)) }
+                .assertError(HttpStatusCode.Unauthorized, ErrorCodes.UNAUTHORIZED)
+            val ownerRefresh = client.post(ApiRoutes.AUTH_REFRESH) {
+                json(RefreshTokenDto(owner.body<TokenPairDto>().refreshToken))
+            }
+            assertEquals(HttpStatusCode.OK, ownerRefresh.status)
+        }
+    }
+
+    @Test
+    fun `an email linked to one google account cannot be taken over by another`() {
+        val google = FakeGoogleTokenVerifier().apply {
+            identities["first"] = GoogleIdentity(subject = "g-first", email = "shared@example.com")
+            identities["second"] = GoogleIdentity(subject = "g-second", email = "shared@example.com")
+        }
+        apiTest(google) {
+            assertEquals(HttpStatusCode.OK, client.post(ApiRoutes.AUTH_GOOGLE) { json(GoogleLoginDto("first")) }.status)
+
+            client.post(ApiRoutes.AUTH_GOOGLE) { json(GoogleLoginDto("second")) }
+                .assertError(HttpStatusCode.Unauthorized, ErrorCodes.UNAUTHORIZED)
+            assertEquals(HttpStatusCode.OK, client.post(ApiRoutes.AUTH_GOOGLE) { json(GoogleLoginDto("first")) }.status)
+        }
+    }
+
+    @Test
     fun `google sign in rejects invalid tokens`() = apiTest {
         client.post(ApiRoutes.AUTH_GOOGLE) { json(GoogleLoginDto("unknown")) }
             .assertError(HttpStatusCode.Unauthorized, ErrorCodes.UNAUTHORIZED)
@@ -150,9 +219,9 @@ class AuthApiTest {
     }
 
     @Test
-    fun `auth endpoints are rate limited while the rest of the api is not`() =
+    fun `sign in endpoints are rate limited while token refresh and the rest of the api are not`() =
         apiTest(config = testAppConfig(rateLimit = RateLimitConfig(authRequestsPerMinute = 3))) {
-            val token = register().accessToken
+            val tokens = register()
             repeat(2) {
                 client.post(ApiRoutes.AUTH_LOGIN) { json(EmailCredentialsDto("user@example.com", "password123")) }
                     .also { assertEquals(HttpStatusCode.OK, it.status) }
@@ -161,6 +230,12 @@ class AuthApiTest {
             client.post(ApiRoutes.AUTH_LOGIN) { json(EmailCredentialsDto("user@example.com", "password123")) }
                 .assertError(HttpStatusCode.TooManyRequests, ErrorCodes.TOO_MANY_REQUESTS)
 
-            assertEquals(HttpStatusCode.OK, client.get(ApiRoutes.ME) { bearerAuth(token) }.status)
+            assertEquals(HttpStatusCode.OK, client.get(ApiRoutes.ME) { bearerAuth(tokens.accessToken) }.status)
+            var refreshToken = tokens.refreshToken
+            repeat(5) {
+                val refreshed = client.post(ApiRoutes.AUTH_REFRESH) { json(RefreshTokenDto(refreshToken)) }
+                assertEquals(HttpStatusCode.OK, refreshed.status)
+                refreshToken = refreshed.body<TokenPairDto>().refreshToken
+            }
         }
 }

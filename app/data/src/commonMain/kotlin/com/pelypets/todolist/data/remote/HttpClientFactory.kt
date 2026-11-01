@@ -8,9 +8,9 @@ import com.pelypets.todolist.data.session.SessionManager
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.authProvider
 import io.ktor.client.plugins.auth.providers.BearerAuthProvider
@@ -25,7 +25,6 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 
 data class ApiConfig(val baseUrl: String, val enableLogging: Boolean = false)
@@ -45,6 +44,9 @@ object HttpClientFactory {
 
     /** Statuses a proxy returns while the server restarts or redeploys; worth another try for reads. */
     private val transientStatuses = setOf(HttpStatusCode.BadGateway, HttpStatusCode.ServiceUnavailable, HttpStatusCode.GatewayTimeout)
+
+    /** The server's answers to a refresh token that is revoked, expired or malformed. */
+    private val rejectedRefreshStatuses = setOf(HttpStatusCode.Unauthorized, HttpStatusCode.BadRequest)
 
     fun create(engine: HttpClientEngine, config: ApiConfig, session: SessionManager): HttpClient = HttpClient(engine) {
         expectSuccess = true
@@ -74,6 +76,9 @@ object HttpClientFactory {
                         session.end()
                         return@refreshTokens null
                     }
+                    // Only a rejected refresh token ends the session. Any other failure (no network, a 5xx while the
+                    // server restarts) propagates to the original request, which fails with it, and the next request
+                    // tries to refresh again.
                     try {
                         val pair = client.post(ApiRoutes.AUTH_REFRESH) {
                             markAsRefreshTokenRequest()
@@ -81,12 +86,9 @@ object HttpClientFactory {
                         }.body<TokenPairDto>()
                         session.start(pair.toStoredTokens())
                         BearerTokens(pair.accessToken, pair.refreshToken)
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: ResponseException) {
+                    } catch (e: ClientRequestException) {
+                        if (e.response.status !in rejectedRefreshStatuses) throw e
                         session.end()
-                        null
-                    } catch (e: Exception) {
                         null
                     }
                 }

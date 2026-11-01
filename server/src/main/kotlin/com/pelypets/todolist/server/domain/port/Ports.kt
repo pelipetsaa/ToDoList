@@ -14,6 +14,8 @@ interface UserRepository {
 
     /** @throws com.pelypets.todolist.server.domain.EmailTakenException if the email is already used. */
     suspend fun create(user: User): User
+
+    /** Links the Google account and removes the password, so only Google can sign in to this user afterwards. */
     suspend fun linkGoogleSubject(userId: UUID, subject: String)
 }
 
@@ -29,6 +31,8 @@ interface RefreshTokenRepository {
     suspend fun save(record: RefreshTokenRecord)
     suspend fun findByHash(tokenHash: String): RefreshTokenRecord?
     suspend fun deleteByHash(tokenHash: String): Boolean
+    suspend fun deleteAllForUser(userId: UUID)
+    suspend fun deleteExpired(userId: UUID, now: Instant)
 }
 
 interface PasswordHasher {

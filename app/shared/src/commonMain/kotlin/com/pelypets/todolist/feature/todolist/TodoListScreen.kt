@@ -43,12 +43,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pelypets.todolist.core.ui.components.StatusBadge
 import com.pelypets.todolist.core.ui.formatted
+import com.pelypets.todolist.core.ui.loadLocalizedMessage
+import com.pelypets.todolist.core.ui.localizedMessage
 import com.pelypets.todolist.core.ui.text
 import com.pelypets.todolist.domain.model.Period
 import com.pelypets.todolist.domain.model.Todo
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -76,7 +77,7 @@ fun TodoListRoute(onOpenTodo: (id: String?) -> Unit, viewModel: TodoListViewMode
         viewModel.effects.collect { effect ->
             when (effect) {
                 is TodoListEffect.OpenTodo -> currentOnOpenTodo(effect.id)
-                is TodoListEffect.ShowError -> snackbarHostState.showSnackbar(getString(effect.error.text))
+                is TodoListEffect.ShowError -> snackbarHostState.showSnackbar(effect.error.loadLocalizedMessage())
             }
         }
     }
@@ -125,7 +126,7 @@ fun TodoListScreen(state: TodoListState, snackbarHostState: SnackbarHostState, o
                     }
 
                     state.error != null -> Placeholder(
-                        title = stringResource(state.error.text),
+                        title = state.error.localizedMessage(),
                         action = stringResource(Res.string.retry) to { onIntent(TodoListIntent.Retry) },
                     )
 

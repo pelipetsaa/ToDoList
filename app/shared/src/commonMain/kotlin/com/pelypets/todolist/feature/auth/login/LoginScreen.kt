@@ -17,14 +17,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pelypets.todolist.auth.GoogleSignInProvider
 import com.pelypets.todolist.auth.GoogleSignInResult
 import com.pelypets.todolist.auth.LocalGoogleSignInProvider
 import com.pelypets.todolist.core.ui.components.ProgressButton
-import com.pelypets.todolist.core.ui.text
+import com.pelypets.todolist.core.ui.localizedMessage
 import com.pelypets.todolist.feature.auth.AuthHeader
 import com.pelypets.todolist.feature.auth.AuthLayout
 import com.pelypets.todolist.feature.auth.CredentialField
 import com.pelypets.todolist.feature.auth.FormError
+import kotlinx.coroutines.CancellationException
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import todolist.app.shared.generated.resources.Res
@@ -49,19 +51,32 @@ fun LoginRoute(onNavigateToRegister: () -> Unit, viewModel: LoginViewModel = koi
         viewModel.effects.collect { effect ->
             when (effect) {
                 LoginEffect.NavigateToRegister -> currentOnNavigateToRegister()
-
-                LoginEffect.LaunchGoogleSignIn -> viewModel.onIntent(
-                    when (val result = googleSignIn.signIn()) {
-                        is GoogleSignInResult.Success -> LoginIntent.GoogleTokenReceived(result.idToken)
-                        GoogleSignInResult.Cancelled -> LoginIntent.GoogleCancelled
-                        is GoogleSignInResult.Failure -> LoginIntent.GoogleFailed(result.message)
-                    },
-                )
+                LoginEffect.LaunchGoogleSignIn -> googleSignIn.signInAndReport(viewModel::onIntent)
             }
         }
     }
 
     LoginScreen(state = state, onIntent = viewModel::onIntent)
+}
+
+/**
+ * Shows the account picker and reports its outcome. The picker is cancelled together with the screen, e.g. when
+ * Android recreates the Activity on rotation; that is reported too, or the view model would stay busy forever.
+ */
+internal suspend fun GoogleSignInProvider.signInAndReport(onIntent: (LoginIntent) -> Unit) {
+    val result = try {
+        signIn()
+    } catch (e: CancellationException) {
+        onIntent(LoginIntent.GoogleCancelled)
+        throw e
+    }
+    onIntent(
+        when (result) {
+            is GoogleSignInResult.Success -> LoginIntent.GoogleTokenReceived(result.idToken)
+            GoogleSignInResult.Cancelled -> LoginIntent.GoogleCancelled
+            is GoogleSignInResult.Failure -> LoginIntent.GoogleFailed(result.message)
+        },
+    )
 }
 
 @Composable
@@ -125,5 +140,5 @@ fun LoginScreen(state: LoginState, onIntent: (LoginIntent) -> Unit) {
 private fun LoginError.message(): String = when (this) {
     LoginError.InvalidCredentials -> stringResource(Res.string.error_invalid_credentials)
     LoginError.GoogleFailed -> stringResource(Res.string.error_google_failed)
-    is LoginError.Other -> stringResource(error.text)
+    is LoginError.Other -> error.localizedMessage()
 }

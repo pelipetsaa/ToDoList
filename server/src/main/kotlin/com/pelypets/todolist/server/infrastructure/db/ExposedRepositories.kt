@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -55,7 +56,10 @@ class ExposedUserRepository(private val db: AppDatabase) : UserRepository {
 
     override suspend fun linkGoogleSubject(userId: UUID, subject: String) {
         db.query {
-            UsersTable.update({ UsersTable.id eq userId }) { it[googleSubject] = subject }
+            UsersTable.update({ UsersTable.id eq userId }) {
+                it[googleSubject] = subject
+                it[passwordHash] = null
+            }
         }
     }
 
@@ -158,5 +162,17 @@ class ExposedRefreshTokenRepository(private val db: AppDatabase) : RefreshTokenR
 
     override suspend fun deleteByHash(tokenHash: String): Boolean = db.query {
         RefreshTokensTable.deleteWhere { RefreshTokensTable.tokenHash eq tokenHash } > 0
+    }
+
+    override suspend fun deleteAllForUser(userId: UUID) {
+        db.query { RefreshTokensTable.deleteWhere { RefreshTokensTable.userId eq userId } }
+    }
+
+    override suspend fun deleteExpired(userId: UUID, now: Instant) {
+        db.query {
+            RefreshTokensTable.deleteWhere {
+                (RefreshTokensTable.userId eq userId) and (RefreshTokensTable.expiresAt lessEq now.toOffsetDateTime())
+            }
+        }
     }
 }

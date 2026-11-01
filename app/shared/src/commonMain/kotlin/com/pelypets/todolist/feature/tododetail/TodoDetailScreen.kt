@@ -44,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pelypets.todolist.core.ui.components.ProgressButton
 import com.pelypets.todolist.core.ui.formatted
+import com.pelypets.todolist.core.ui.loadLocalizedMessage
+import com.pelypets.todolist.core.ui.localizedMessage
 import com.pelypets.todolist.core.ui.text
 import com.pelypets.todolist.domain.model.TodoStatus
 import kotlinx.datetime.LocalDate
@@ -51,7 +53,6 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
-import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -90,7 +91,7 @@ fun TodoDetailRoute(
         viewModel.effects.collect { effect ->
             when (effect) {
                 TodoDetailEffect.Close -> currentOnClose()
-                is TodoDetailEffect.ShowError -> snackbarHostState.showSnackbar(getString(effect.error.text))
+                is TodoDetailEffect.ShowError -> snackbarHostState.showSnackbar(effect.error.loadLocalizedMessage())
             }
         }
     }
@@ -129,7 +130,7 @@ fun TodoDetailScreen(state: TodoDetailState, snackbarHostState: SnackbarHostStat
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text(stringResource(state.loadError.text), style = MaterialTheme.typography.titleMedium)
+                    Text(state.loadError.localizedMessage(), style = MaterialTheme.typography.titleMedium)
                     Button(onClick = { onIntent(TodoDetailIntent.Retry) }) { Text(stringResource(Res.string.retry)) }
                 }
 

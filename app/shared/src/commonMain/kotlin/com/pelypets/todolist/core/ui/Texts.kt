@@ -1,10 +1,13 @@
 package com.pelypets.todolist.core.ui
 
+import androidx.compose.runtime.Composable
 import com.pelypets.todolist.domain.error.DomainError
 import com.pelypets.todolist.domain.error.ValidationError
 import com.pelypets.todolist.domain.model.Period
 import com.pelypets.todolist.domain.model.TodoStatus
 import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import todolist.app.shared.generated.resources.Res
 import todolist.app.shared.generated.resources.error_conflict
 import todolist.app.shared.generated.resources.error_network
@@ -39,6 +42,16 @@ val DomainError.text: StringResource
         is DomainError.Validation -> Res.string.error_validation
         is DomainError.Unknown -> Res.string.error_unknown
     }
+
+/** [text] plus the server's explanation of a validation error the client did not catch itself. */
+@Composable
+fun DomainError.localizedMessage(): String = withServerDetail(stringResource(text))
+
+/** [localizedMessage] outside of composition, e.g. for a snackbar. */
+suspend fun DomainError.loadLocalizedMessage(): String = withServerDetail(getString(text))
+
+internal fun DomainError.withServerDetail(text: String): String =
+    (this as? DomainError.Validation)?.serverMessage?.takeIf { it.isNotBlank() }?.let { "$text ($it)" } ?: text
 
 val ValidationError.text: StringResource
     get() = when (this) {

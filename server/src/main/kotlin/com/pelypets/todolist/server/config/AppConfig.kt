@@ -96,7 +96,7 @@ data class JwtConfig(
 data class GoogleConfig(val clientIds: List<String>)
 
 data class RateLimitConfig(
-    /** Requests per client IP per minute across all /auth endpoints. */
+    /** Requests per client IP per minute across register, login and Google sign-in. */
     val authRequestsPerMinute: Int = DEFAULT_AUTH_REQUESTS_PER_MINUTE,
 ) {
     companion object {

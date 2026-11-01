@@ -9,10 +9,11 @@ import com.pelypets.todolist.server.api.plugins.configureSecurity
 import com.pelypets.todolist.server.api.plugins.configureSerialization
 import com.pelypets.todolist.server.api.plugins.configureStatusPages
 import com.pelypets.todolist.server.api.plugins.configureValidation
-import com.pelypets.todolist.server.api.routes.authRoutes
 import com.pelypets.todolist.server.api.routes.healthRoutes
 import com.pelypets.todolist.server.api.routes.meRoutes
+import com.pelypets.todolist.server.api.routes.signInRoutes
 import com.pelypets.todolist.server.api.routes.todoRoutes
+import com.pelypets.todolist.server.api.routes.tokenRoutes
 import com.pelypets.todolist.server.application.AuthService
 import com.pelypets.todolist.server.application.TodoService
 import com.pelypets.todolist.server.config.AppConfig
@@ -63,8 +64,9 @@ fun Application.configureApp(config: AppConfig, overrides: List<Module> = emptyL
         swaggerUI(path = API_DOCS_PATH, swaggerFile = OPENAPI_SPEC)
         healthRoutes(database)
         rateLimit(AUTH_RATE_LIMIT) {
-            authRoutes(authService)
+            signInRoutes(authService)
         }
+        tokenRoutes(authService)
         authenticate(JWT_AUTH) {
             meRoutes(authService)
             todoRoutes(todoService)
