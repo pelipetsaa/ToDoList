@@ -5,6 +5,8 @@ versions are the `v*` tags that trigger the release workflow.
 
 ## Unreleased
 
+## 1.2.0 — 2026-11-01
+
 ### Fixed
 - Sign-up and sign-in with a password longer than 72 bytes (e.g. 128 characters, or 40 Cyrillic letters) no longer
   fail with a server error.
