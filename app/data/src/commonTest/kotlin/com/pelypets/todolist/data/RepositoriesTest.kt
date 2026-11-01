@@ -124,6 +124,42 @@ class RepositoriesTest {
     }
 
     @Test
+    fun refreshFailingWhileTheServerRestartsKeepsTheSessionAndRefreshesLater() = runTest {
+        var serverUp = false
+        val env = TestEnvironment(loggedIn) { request ->
+            when {
+                request.url.encodedPath == ApiRoutes.AUTH_REFRESH && !serverUp -> respondJson("", HttpStatusCode.BadGateway)
+                request.url.encodedPath == ApiRoutes.AUTH_REFRESH -> respondJson(TOKENS_JSON)
+                request.headers[HttpHeaders.Authorization] == "Bearer old-access" -> respondUnauthorized()
+                else -> respondJson("[]")
+            }
+        }
+        val repository = TodoRepositoryImpl(TodoApi(env.client))
+
+        val failed = repository.getTodos(range)
+
+        assertEquals(DomainError.Unknown("HTTP 502"), assertIs<DomainResult.Failure>(failed).error)
+        assertEquals(loggedIn, env.storage.tokens)
+        assertEquals(SessionState.LOGGED_IN, env.session.session.value)
+
+        serverUp = true
+        assertIs<DomainResult.Success<List<Todo>>>(repository.getTodos(range))
+        assertEquals(StoredTokens("new-access", "new-refresh"), env.storage.tokens)
+    }
+
+    @Test
+    fun refreshWithoutNetworkKeepsTheSession() = runTest {
+        val env = TestEnvironment(loggedIn) { request ->
+            if (request.url.encodedPath == ApiRoutes.AUTH_REFRESH) throw IOException("offline") else respondUnauthorized()
+        }
+
+        val result = TodoRepositoryImpl(TodoApi(env.client)).getTodos(range)
+
+        assertEquals(DomainError.Network, assertIs<DomainResult.Failure>(result).error)
+        assertEquals(SessionState.LOGGED_IN, env.session.session.value)
+    }
+
+    @Test
     fun loginStoresTokensWithoutSendingABearerHeader() = runTest {
         val env = TestEnvironment { respondJson(TOKENS_JSON) }
         val repository = AuthRepositoryImpl(AuthApi(env.client), env.session, env.client)

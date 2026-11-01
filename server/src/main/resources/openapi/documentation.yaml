@@ -16,7 +16,9 @@ servers:
 
 tags:
   - name: auth
-    description: Sign-up, sign-in and token rotation. Limited to 20 requests per minute per client IP.
+    description: |
+      Sign-up, sign-in and token rotation. Register, login and Google sign-in are limited to 20 requests per minute
+      per client IP; refresh and logout are not limited.
   - name: todos
     description: The signed-in user's todos.
   - name: ops
@@ -73,7 +75,9 @@ paths:
       summary: Sign in with a Google ID token
       description: |
         Exchanges an ID token obtained on the device for a token pair. Creates the account on first sign-in and links
-        it to an existing email account.
+        it to an existing email account. Linking removes that account's password and revokes its refresh tokens,
+        because email sign-up does not prove ownership of the address. An email already linked to a different Google
+        account is rejected with `UNAUTHORIZED`.
       operationId: loginWithGoogle
       requestBody:
         required: true
@@ -113,7 +117,6 @@ paths:
               schema: { $ref: "#/components/schemas/TokenPair" }
         "400": { $ref: "#/components/responses/ValidationError" }
         "401": { $ref: "#/components/responses/Unauthorized" }
-        "429": { $ref: "#/components/responses/TooManyRequests" }
 
   /api/v1/auth/logout:
     post:
@@ -128,7 +131,6 @@ paths:
       responses:
         "204": { description: Signed out. }
         "400": { $ref: "#/components/responses/ValidationError" }
-        "429": { $ref: "#/components/responses/TooManyRequests" }
 
   /api/v1/me:
     get:

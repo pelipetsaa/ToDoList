@@ -42,7 +42,8 @@ fun Route.healthRoutes(database: AppDatabase) {
     }
 }
 
-fun Route.authRoutes(authService: AuthService) {
+/** Endpoints that check a password or a Google token; registered under the auth rate limit. */
+fun Route.signInRoutes(authService: AuthService) {
     post(ApiRoutes.AUTH_REGISTER) {
         val body = call.receive<EmailCredentialsDto>()
         call.respond(HttpStatusCode.Created, authService.register(body.email, body.password).toDto())
@@ -55,6 +56,13 @@ fun Route.authRoutes(authService: AuthService) {
         val body = call.receive<GoogleLoginDto>()
         call.respond(authService.loginWithGoogle(body.idToken).toDto())
     }
+}
+
+/**
+ * Refresh and logout take a random 256-bit token that cannot be guessed, so they are not rate limited: a throttled
+ * refresh would sign the user out of the app.
+ */
+fun Route.tokenRoutes(authService: AuthService) {
     post(ApiRoutes.AUTH_REFRESH) {
         val body = call.receive<RefreshTokenDto>()
         call.respond(authService.refresh(body.refreshToken).toDto())

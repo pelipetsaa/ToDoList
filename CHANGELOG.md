@@ -5,6 +5,22 @@ versions are the `v*` tags that trigger the release workflow.
 
 ## Unreleased
 
+### Fixed
+- Sign-up and sign-in with a password longer than 72 bytes (e.g. 128 characters, or 40 Cyrillic letters) no longer
+  fail with a server error.
+- Signing in with Google to an account registered with the same email removes that account's password and signs
+  out its other sessions, so whoever registered an address they do not own loses access. An email already linked
+  to another Google account is rejected.
+- The apps no longer sign the user out when a token refresh fails because the server is restarting or the network
+  is down; only a rejected refresh token ends the session. Refresh and logout are no longer rate limited.
+- The Google sign-in button no longer stays disabled after the Android screen is rotated while the account picker is
+  open.
+- Validation errors reported by the server show the server's explanation.
+- Expired refresh tokens are deleted when the user signs in again.
+
+### Changed
+- An account that has signed in with Google can no longer sign in with its old password.
+
 ## 1.1.0 — 2026-10-29
 
 ### Added

@@ -58,17 +58,35 @@ class AuthService(
         val email = Validation.normalizeEmail(identity.email)
 
         val user = users.findByGoogleSubject(identity.subject)
-            ?: users.findByEmail(email)?.also { users.linkGoogleSubject(it.id, identity.subject) }
-            ?: users.create(
-                User(
-                    id = UUID.randomUUID(),
-                    email = email,
-                    passwordHash = null,
-                    googleSubject = identity.subject,
-                    createdAt = clock.now(),
-                ),
-            )
+            ?: users.findByEmail(email)?.let { linkGoogle(it, identity.subject) }
+            ?: createGoogleUser(email, identity.subject)
         return issueTokens(user.id)
+    }
+
+    /**
+     * Email sign-up does not verify the address, so whoever set the password may not own the mailbox. Google has
+     * verified it: the password and every session opened with it are revoked, and only Google signs in from now on.
+     */
+    private suspend fun linkGoogle(user: User, subject: String): User {
+        if (user.googleSubject != null) throw UnauthorizedException("This email is linked to another Google account")
+        users.linkGoogleSubject(user.id, subject)
+        refreshTokens.deleteAllForUser(user.id)
+        return user
+    }
+
+    private suspend fun createGoogleUser(email: String, subject: String): User = try {
+        users.create(
+            User(
+                id = UUID.randomUUID(),
+                email = email,
+                passwordHash = null,
+                googleSubject = subject,
+                createdAt = clock.now(),
+            ),
+        )
+    } catch (e: EmailTakenException) {
+        // A concurrent sign-in with the same Google account created the user first.
+        users.findByGoogleSubject(subject) ?: throw e
     }
 
     suspend fun refresh(refreshToken: String): TokenPair {
@@ -87,6 +105,8 @@ class AuthService(
     suspend fun currentUser(userId: UUID): User = users.findById(userId) ?: throw UnauthorizedException("User no longer exists")
 
     private suspend fun issueTokens(userId: UUID): TokenPair {
+        // Tokens of sessions that were never refreshed or logged out would otherwise stay in the table forever.
+        refreshTokens.deleteExpired(userId, clock.now())
         val refreshToken = refreshTokenGenerator.generate()
         refreshTokens.save(
             RefreshTokenRecord(

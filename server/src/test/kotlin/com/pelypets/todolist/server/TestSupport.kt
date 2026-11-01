@@ -48,10 +48,24 @@ object TestDatabase {
             .also { AppDatabase.connect(it).close() }
     }
 
-    fun truncateAll() {
+    fun truncateAll() = execute("TRUNCATE users CASCADE")
+
+    fun execute(sql: String) {
         val config = config
         DriverManager.getConnection(config.url, config.user, config.password).use { connection ->
-            connection.createStatement().use { it.execute("TRUNCATE users CASCADE") }
+            connection.createStatement().use { it.execute(sql) }
+        }
+    }
+
+    fun count(sql: String): Int {
+        val config = config
+        return DriverManager.getConnection(config.url, config.user, config.password).use { connection ->
+            connection.createStatement().use { statement ->
+                statement.executeQuery(sql).use { result ->
+                    result.next()
+                    result.getInt(1)
+                }
+            }
         }
     }
 }

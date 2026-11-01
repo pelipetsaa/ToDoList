@@ -17,6 +17,9 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
+# VS Code workspace settings and the Java extension's build output
+.vscode/
+/server/bin/
 
 # Signing keys must never be committed
 *.jks

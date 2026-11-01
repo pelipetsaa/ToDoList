@@ -79,7 +79,7 @@ fun Application.configureMonitoring() {
 }
 
 /**
- * Limits sign-in, sign-up and token endpoints per client IP to slow down password guessing.
+ * Limits sign-in and sign-up endpoints per client IP to slow down password guessing.
  * Behind a proxy ([trustProxy]) the client IP is the last X-Forwarded-For entry, the one the proxy appended itself.
  */
 fun Application.configureRateLimits(config: RateLimitConfig, trustProxy: Boolean) {

@@ -68,7 +68,7 @@ Server (environment variables, defaults in `server/src/main/resources/applicatio
 | `DB_URL`, `DB_USER`, `DB_PASSWORD` | local docker compose database | PostgreSQL connection |
 | `APP_ENV` | `development` | `production` refuses to start without a real `JWT_SECRET` (the Docker image sets it) |
 | `JWT_SECRET` | built-in key in development | HS256 signing key, at least 32 characters — **required in production** |
-| `AUTH_RATE_LIMIT_PER_MINUTE` | `20` | Requests per client IP per minute to `/api/v1/auth/*` |
+| `AUTH_RATE_LIMIT_PER_MINUTE` | `20` | Requests per client IP per minute to register, login and Google sign-in (refresh and logout are not limited) |
 | `TRUST_PROXY` | `false` | Take the client IP from `X-Forwarded-For`; enable only behind a reverse proxy |
 | `GOOGLE_CLIENT_IDS` | project web and iOS clients | Comma-separated OAuth client IDs accepted as the Google ID token audience |
 

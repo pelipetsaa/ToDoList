@@ -12,7 +12,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.text.input.ImeAction
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pelypets.todolist.core.ui.components.ProgressButton
-import com.pelypets.todolist.core.ui.text
+import com.pelypets.todolist.core.ui.localizedMessage
 import com.pelypets.todolist.feature.auth.AuthHeader
 import com.pelypets.todolist.feature.auth.AuthLayout
 import com.pelypets.todolist.feature.auth.CredentialField
@@ -96,7 +96,7 @@ fun RegisterScreen(state: RegisterState, onIntent: (RegisterIntent) -> Unit) {
                 FormError(
                     when (error) {
                         RegisterError.EmailTaken -> stringResource(Res.string.error_email_taken)
-                        is RegisterError.Other -> stringResource(error.error.text)
+                        is RegisterError.Other -> error.error.localizedMessage()
                     },
                 )
             }
