@@ -35,7 +35,7 @@ logstashEncoder = "9.0"
 micrometer = "1.17.2"
 material3 = "1.12.0-alpha03"
 postgresql = "42.7.14"
-spotless = "8.10.4"
+spotless = "8.11.0"
 testcontainers = "2.0.5"
 turbine = "1.2.1"
 
